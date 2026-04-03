@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>⚡ FUN SHOP ADMIN PRO MAX</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#030308;--bg2:#06060e;--card:#0b0b16;--card2:#10101e;--card3:#161628;
+--border:#1c1c38;--border2:#28284a;--text:#ededf8;--muted:#7070a0;--dim:#40406a;
+--p:#7c5cff;--p2:#9b7aff;--p3:#5a3ce0;
+--a:#00ffb3;--a2:#00dda0;--a3:#00bb88;
+--c:#00d4ff;--c2:#00b8e6;
+--s:#00ffb3;--d:#ff3d6b;--d2:#ff2255;--w:#ffb84d;--w2:#ff9500;
+--o:#ff6b35;--pk:#ff5ca0;--g:#ffd900;--g2:#f5c800;
+--gp:rgba(124,92,255,.3);--ga:rgba(0,255,179,.2);--gd:rgba(255,61,107,.2);
+--r:16px;--rs:10px;--rr:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;outline:none}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:10px}
+
+/* Ambient */
+body::before{content:'';position:fixed;inset:0;background:
+radial-gradient(ellipse at 10% 5%,rgba(124,92,255,.08),transparent 50%),
+radial-gradient(ellipse at 90% 90%,rgba(0,255,179,.05),transparent 45%),
+radial-gradient(ellipse at 50% 40%,rgba(0,212,255,.03),transparent 55%),
+radial-gradient(ellipse at 70% 20%,rgba(255,61,107,.03),transparent 40%);
+pointer-events:none;z-index:0}
+.wrap{max-width:1800px;margin:0 auto;padding:14px 22px 80px;position:relative;z-index:1}
+
+/* ===== HEADER ===== */
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 0 16px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.brand{font-size:22px;font-weight:900;letter-spacing:2.5px;
+background:linear-gradient(135deg,var(--p),var(--a),var(--c),var(--p));background-size:300% 300%;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:bShift 5s ease infinite}
+@keyframes bShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.live-pill{display:flex;align-items:center;gap:7px;background:var(--card2);padding:5px 14px;border-radius:var(--rr);border:1px solid var(--border);font-size:10px}
+.dot-live{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 12px var(--a);animation:pls 1.4s infinite}
+@keyframes pls{0%,100%{opacity:1;box-shadow:0 0 12px var(--a)}50%{opacity:.3;box-shadow:0 0 4px var(--a)}}
+.clk{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--c)}
+
+/* ===== STATS ===== */
+.st-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:1500px){.st-grid{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:1000px){.st-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.st-grid{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;transition:.3s;cursor:default}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,transparent,var(--scc),transparent);opacity:.85}
+.sc::after{content:'';position:absolute;bottom:0;right:0;width:60px;height:60px;border-radius:50%;background:var(--scc);opacity:.04;transform:translate(20px,20px)}
+.sc:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--scc) 50%,transparent);box-shadow:0 12px 35px -10px var(--scc)}
+.sc.click{cursor:pointer}.sc.on{background:rgba(255,255,255,.025);border-color:var(--scc)!important;box-shadow:0 0 25px -8px var(--scc)}
+.sc-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:8px}
+.sc-lb{font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);font-weight:700}
+.sc-vl{font-size:21px;font-weight:900;margin-top:3px;font-family:'JetBrains Mono',monospace;line-height:1}
+.sc-sub{font-size:9px;color:var(--dim);margin-top:4px;font-weight:600}
+
+/* Progress Bar inside stat */
+.sc-bar{height:3px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}
+.sc-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* ===== ALERTS ===== */
+.alt-bar{background:linear-gradient(90deg,rgba(255,61,107,.06),rgba(255,184,77,.05),rgba(124,92,255,.04));border:1px solid rgba(255,61,107,.18);border-radius:var(--r);padding:11px 16px;margin-bottom:14px;display:none;animation:aIn .4s}
+@keyframes aIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.alt-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.ap{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.4);padding:4px 11px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid rgba(255,255,255,.06)}
+.ap.fraud{color:var(--g);border-color:rgba(255,217,0,.2)}.ap.expiry{color:var(--w);border-color:rgba(255,184,77,.2)}.ap.pay{color:var(--a);border-color:rgba(0,255,179,.2)}
+
+/* ===== CHARTS ===== */
+.ch-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:1100px){.ch-row{grid-template-columns:1fr}}
+.ch-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:relative}
+.ch-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ch-hd h4{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;color:var(--muted)}
+.ch-hd h4 i{font-size:10px}
+.ch-box canvas{width:100%!important;height:200px!important}
+
+/* Chart Filter Pills */
+.ch-filters{display:flex;gap:4px}
+.ch-f{padding:4px 10px;border-radius:14px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:.2s;text-transform:uppercase;letter-spacing:.5px}
+.ch-f:hover{border-color:var(--p);color:var(--text)}
+.ch-f.active{background:var(--p);color:#fff;border-color:var(--p);box-shadow:0 2px 12px var(--gp)}
+
+/* ===== MAIN GRID ===== */
+.gm{display:grid;grid-template-columns:390px 1fr;gap:14px}
+@media(max-width:1050px){.gm{grid-template-columns:1fr}}
+.pnl{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;height:fit-content}
+.pnl-t{font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+
+/* Forms */
+input,select,textarea{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:var(--rs);width:100%;font-family:inherit;font-size:12px;transition:.25s}
+input:focus,select:focus,textarea:focus{border-color:var(--p);box-shadow:0 0 0 3px var(--gp)}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+.fr{display:flex;gap:6px;margin-bottom:6px}
+
+.btn{padding:9px 14px;border:none;border-radius:var(--rs);font-weight:700;cursor:pointer;font-size:11px;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:.2s;white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--p3));color:#fff}.btn-p:hover{box-shadow:0 4px 22px var(--gp)}
+.btn-s{background:linear-gradient(135deg,var(--a),var(--a3));color:#000;font-weight:800}.btn-s:hover{box-shadow:0 4px 22px var(--ga)}
+.btn-d{background:rgba(255,61,107,.1);color:var(--d);border:1px solid rgba(255,61,107,.2)}.btn-d:hover{background:rgba(255,61,107,.18)}
+.btn-g{background:var(--card2);color:var(--text);border:1px solid var(--border)}.btn-g:hover{border-color:var(--p);color:var(--p2)}
+.btn-w{background:rgba(255,184,77,.1);color:var(--w);border:1px solid rgba(255,184,77,.2)}
+.btn-full{width:100%}.btn-sm{padding:6px 10px;font-size:10px}.btn-ic{width:32px;height:32px;padding:0;border-radius:8px}
+
+/* Request cards */
+.rq{background:var(--card2);border:1px solid var(--border);padding:12px;border-radius:12px;margin-bottom:8px;border-left:3px solid var(--w);animation:sU .3s}
+.rq.fraud{border-left-color:var(--d);background:rgba(255,61,107,.03)}
+@keyframes sU{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.utr-m{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,184,77,.1);color:var(--w);padding:2px 7px;border-radius:5px;cursor:pointer}
+.fraud-t{font-size:9px;font-weight:800;color:var(--d);background:rgba(255,61,107,.12);padding:2px 7px;border-radius:4px;text-transform:uppercase;animation:blk 1s infinite}
+@keyframes blk{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Agent grid */
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;max-height:72vh;overflow-y:auto;padding-right:4px}
+.ag{background:var(--card2);border:1px solid var(--border);padding:13px;border-radius:13px;transition:.25s;position:relative}
+.ag:hover{border-color:var(--p);transform:translateY(-1px);box-shadow:0 8px 25px -10px var(--gp)}
+.ag.soon{border-color:var(--w)}.ag.soon::after{content:'⚠ EXPIRING';position:absolute;top:7px;right:7px;font-size:8px;font-weight:800;color:var(--w);background:rgba(255,184,77,.12);padding:2px 6px;border-radius:4px;letter-spacing:.5px}
+.bdg{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.b-on{background:rgba(0,255,179,.1);color:var(--a)}.b-off{background:rgba(255,61,107,.1);color:var(--d)}
+.ag-acts{display:flex;gap:4px;margin-top:8px}
+
+/* Agent Progress Bar */
+.ag-prog{height:3px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden}
+.ag-prog-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* Modals */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(16px);z-index:100;display:none;justify-content:center;align-items:center;padding:20px}
+.mb{background:var(--card);width:100%;max-width:500px;padding:22px;border-radius:20px;border:1px solid var(--border2);box-shadow:0 30px 90px rgba(0,0,0,.7);animation:mIn .3s}
+@keyframes mIn{from{opacity:0;scale:.93;transform:translateY(14px)}to{opacity:1;scale:1;transform:translateY(0)}}
+.mb h3{font-size:16px;font-weight:800}
+.mb label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:700;margin:10px 0 3px}
+.img-pv{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:8px;display:none;flex-shrink:0}
+.ext-row{display:flex;gap:4px;margin:8px 0 12px;flex-wrap:wrap}
+
+/* ID Popup */
+.idp{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(16px);z-index:150;display:none;justify-content:center;align-items:center;padding:20px}
+.idp-box{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:22px;width:100%;max-width:540px;max-height:82vh;animation:mIn .3s}
+.idp-box h3{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.idp-scroll{max-height:56vh;overflow-y:auto;padding-right:4px}
+.idi{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin-bottom:6px;transition:.2s}
+.idi:hover{border-color:var(--p);background:var(--card3)}
+
+/* Invoice */
+#inv-box{background:#fff;color:#1a1a2e;padding:30px;font-family:'Outfit',sans-serif;border-radius:14px;max-width:520px;margin:0 auto}
+#inv-box h2{color:#1a1a2e;font-weight:900;font-size:20px;margin-bottom:2px}
+#inv-box table{width:100%;border-collapse:collapse;margin:16px 0}
+#inv-box table th,#inv-box table td{text-align:left;padding:8px 10px;border-bottom:1px solid #e8e8f0;font-size:12px}
+#inv-box table th{background:#f4f4fa;font-weight:700;color:#4a4a6a}
+.inv-total{font-size:20px;font-weight:900;color:#1a1a2e}
+.inv-qr{width:120px;height:120px;object-fit:contain;border-radius:10px;border:2px solid #e0e0e8;margin-top:10px}
+.inv-divider{border:none;border-top:2px solid #ececf4;margin:14px 0}
+.inv-footer{font-size:10px;color:#9a9ab0;text-align:center;margin-top:6px}
+.inv-badge{display:inline-block;background:linear-gradient(135deg,#7c5cff,#00e5a0);color:#fff;font-size:10px;font-weight:800;padding:3px 12px;border-radius:12px;letter-spacing:.5px}
+
+/* Telegram Preview */
+.tg-pv{background:#0e1621;border:1px solid #1a2836;border-radius:12px;padding:12px;margin:8px 0;font-size:12px;color:#e0e0e0;line-height:1.6;white-space:pre-wrap}
+
+/* Activity Log */
+.log-i{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.log-i:last-child{border:none}
+.log-d{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+
+/* Toasts */
+.tc{position:fixed;top:16px;right:16px;z-index:300;display:flex;flex-direction:column;gap:6px}
+.tt{background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:240px;animation:ttIn .3s;box-shadow:0 12px 45px rgba(0,0,0,.6)}
+.tt.out{animation:ttOut .3s forwards}
+@keyframes ttIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes ttOut{to{opacity:0;transform:translateX(40px)}}
+
+.flex{display:flex;align-items:center}.between{justify-content:space-between}.gap{gap:7px}
+.mb6{margin-bottom:6px}.mb10{margin-bottom:10px}.mb12{margin-bottom:12px}
+.mono{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="tc" id="toasts"></div>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+    <div class="brand"><i class="fas fa-bolt"></i> GOD MODE ADMIN</div>
+    <div class="hdr-r">
+        <div class="live-pill"><div class="dot-live"></div><span class="clk" id="clk">00:00:00</span></div>
+    </div>
+</header>
+
+<!-- ===== 8 STAT CARDS ===== -->
+<div class="st-grid">
+    <div class="sc click" onclick="filterTab('active')" id="tab-active" style="--scc:var(--a)">
+        <div class="sc-ic" style="background:rgba(0,255,179,.08);color:var(--a)"><i class="fas fa-user-check"></i></div>
+        <div class="sc-lb">Active Agents</div>
+        <div class="sc-vl" style="color:var(--a)" id="s-act">0</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-act" style="background:var(--a);width:0%"></div></div>
+    </div>
+    <div class="sc click" onclick="showExpiredPopup()" id="tab-exp" style="--scc:var(--d)">
+        <div class="sc-ic" style="background:rgba(255,61,107,.08);color:var(--d)"><i class="fas fa-user-xmark"></i></div>
+        <div class="sc-lb">Expired / Off</div>
+        <div class="sc-vl" style="color:var(--d)" id="s-exp">0</div>
+        <div class="sc-sub">Tap to view all →</div>
+    </div>
+    <div class="sc click" onclick="showTodayPopup()" id="tab-tod" style="--scc:var(--c)">
+        <div class="sc-ic" style="background:rgba(0,212,255,.08);color:var(--c)"><i class="fas fa-user-plus"></i></div>
+        <div class="sc-lb">Today Agents</div>
+        <div class="sc-vl" style="color:var(--c)" id="s-tod">0</div>
+        <div class="sc-sub">Tap to view all →</div>
+    </div>
+    <!-- NEW: Last 7 Days Active -->
+    <div class="sc click" onclick="showWeekPopup()" id="tab-week" style="--scc:var(--o)">
+        <div class="sc-ic" style="background:rgba(255,107,53,.08);color:var(--o)"><i class="fas fa-calendar-week"></i></div>
+        <div class="sc-lb">🔥 Last 7 Days</div>
+        <div class="sc-vl" style="color:var(--o)" id="s-week">0</div>
+        <div class="sc-sub">Tap to view all →</div>
+    </div>
+    <div class="sc" style="--scc:var(--w)">
+        <div class="sc-ic" style="background:rgba(255,184,77,.08);color:var(--w)"><i class="fas fa-coins"></i></div>
+        <div class="sc-lb">💵 Today Income</div>
+        <div class="sc-vl" style="color:var(--w)" id="s-tin">₹0</div>
+    </div>
+    <div class="sc" style="--scc:var(--pk)">
+        <div class="sc-ic" style="background:rgba(255,92,160,.08);color:var(--pk)"><i class="fas fa-arrow-trend-down"></i></div>
+        <div class="sc-lb">📉 Today Expense</div>
+        <div class="sc-vl" style="color:var(--pk)" id="s-tex">₹0</div>
+    </div>
+    <div class="sc" style="--scc:var(--c2)">
+        <div class="sc-ic" style="background:rgba(0,184,230,.08);color:var(--c2)"><i class="fas fa-chart-line"></i></div>
+        <div class="sc-lb">💹 Net Profit</div>
+        <div class="sc-vl" style="color:var(--c2)" id="s-net">₹0</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-net" style="background:var(--c2);width:0%"></div></div>
+    </div>
+    <div class="sc" style="--scc:var(--g)">
+        <div class="sc-ic" style="background:rgba(255,217,0,.08);color:var(--g)"><i class="fas fa-trophy"></i></div>
+        <div class="sc-lb">🏆 Total Profit</div>
+        <div class="sc-vl" style="color:var(--g)" id="s-total">₹0</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-total" style="background:linear-gradient(90deg,var(--g),var(--o));width:0%"></div></div>
+    </div>
+    <div class="sc" style="--scc:var(--p)">
+        <div class="sc-ic" style="background:rgba(124,92,255,.08);color:var(--p)"><i class="fas fa-calendar-check"></i></div>
+        <div class="sc-lb">📆 Monthly Rev</div>
+        <div class="sc-vl" style="color:var(--p)" id="s-mon">₹0</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-mon" style="background:linear-gradient(90deg,var(--p),var(--p2));width:0%"></div></div>
+    </div>
+</div>
+
+<!-- ALERTS -->
+<div class="alt-bar" id="alt-bar">
+    <div class="flex between"><span style="font-weight:800;font-size:11px"><i class="fas fa-triangle-exclamation" style="color:var(--d)"></i> LIVE ALERTS</span><button class="btn btn-sm btn-g" onclick="this.parentElement.parentElement.style.display='none'"><i class="fas fa-xmark"></i></button></div>
+    <div class="alt-pills" id="alt-pills"></div>
+</div>
+
+<!-- ===== CHARTS WITH FILTERS ===== -->
+<div class="ch-row">
+    <!-- Earnings Chart (BIG - has time filter) -->
+    <div class="ch-box">
+        <div class="ch-hd">
+            <h4><i class="fas fa-chart-area" style="color:var(--a)"></i> Earnings Overview</h4>
+            <div class="ch-filters" id="earn-filters">
+                <div class="ch-f" data-range="1" onclick="setEarnRange(1)">1D</div>
+                <div class="ch-f active" data-range="7" onclick="setEarnRange(7)">7D</div>
+                <div class="ch-f" data-range="15" onclick="setEarnRange(15)">15D</div>
+                <div class="ch-f" data-range="30" onclick="setEarnRange(30)">1M</div>
+            </div>
+        </div>
+        <canvas id="ch-e"></canvas>
+    </div>
+    <!-- Growth -->
+    <div class="ch-box">
+        <div class="ch-hd">
+            <h4><i class="fas fa-users" style="color:var(--p)"></i> Agent Growth</h4>
+            <div class="ch-filters" id="grow-filters">
+                <div class="ch-f" data-range="7" onclick="setGrowRange(7)">7D</div>
+                <div class="ch-f active" data-range="15" onclick="setGrowRange(15)">15D</div>
+                <div class="ch-f" data-range="30" onclick="setGrowRange(30)">1M</div>
+            </div>
+        </div>
+        <canvas id="ch-g"></canvas>
+    </div>
+    <!-- Pie -->
+    <div class="ch-box">
+        <div class="ch-hd"><h4><i class="fas fa-chart-pie" style="color:var(--w)"></i> Active vs Expired</h4></div>
+        <canvas id="ch-p"></canvas>
+    </div>
+</div>
+
+<!-- ===== MAIN GRID ===== -->
+<div class="gm">
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Config -->
+        <div class="pnl">
+            <div class="pnl-t"><span><i class="fas fa-sliders" style="color:var(--p)"></i> Global Config</span></div>
+            <input id="g-pay" placeholder="Default UPI Link (upi://pay?...)" class="mb6">
+            <input id="g-qr" placeholder="Default QR Image URL" class="mb6">
+            <input id="g-tg" placeholder="Telegram ID (@FUN_786)" class="mb6">
+            <div class="fr"><input id="g-exp" type="number" placeholder="Today Expense ₹"><button class="btn btn-w btn-sm" onclick="saveExp()"><i class="fas fa-save"></i></button></div>
+            <button class="btn btn-p btn-full" onclick="saveCfg()"><i class="fas fa-check"></i> Save</button>
+        </div>
+        <!-- Payment Requests -->
+        <div class="pnl" style="flex:1">
+            <div class="pnl-t"><span><i class="fas fa-bell" style="color:var(--w)"></i> Payment Requests</span><span class="bdg b-off" id="rq-cnt">0</span></div>
+            <div id="rq-list" style="max-height:360px;overflow-y:auto"><div style="text-align:center;padding:25px;color:var(--dim);font-size:11px">No Pending Requests</div></div>
+        </div>
+        <!-- Activity Log -->
+        <div class="pnl">
+            <div class="pnl-t"><span><i class="fas fa-clock-rotate-left" style="color:var(--c)"></i> Activity Log</span></div>
+            <div id="act-log" style="max-height:200px;overflow-y:auto"><div style="text-align:center;padding:18px;color:var(--dim);font-size:11px">No activity</div></div>
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="pnl">
+        <div class="pnl-t">
+            <span><i class="fas fa-database" style="color:var(--p)"></i> Agent Database</span>
+            <div class="flex gap">
+                <button class="btn btn-g btn-sm" onclick="exportCSV()"><i class="fas fa-download"></i> Export</button>
+                <button class="btn btn-d btn-sm" onclick="bulkDel()" id="btn-del" style="display:none"><i class="fas fa-trash"></i> Expired</button>
+            </div>
+        </div>
+        <!-- Create -->
+        <div style="background:var(--card2);padding:12px;border-radius:13px;border:1px solid var(--border);margin-bottom:12px">
+            <div class="fr"><input id="n-id" placeholder="Agent ID" style="font-weight:700"><input id="n-pr" type="number" placeholder="₹ Price" style="max-width:90px"></div>
+            <div class="fr">
+                <select id="n-pl">
+                    <option value="60">1 Min Test</option>
+                    <option value="86400">1 Day</option>
+                    <option value="1296000">15 Days</option>
+                    <option value="2592000" selected>1 Month</option>
+                    <option value="5184000">2 Months</option>
+                    <option value="10368000">4 Months</option>
+                    <option value="15552000">6 Months</option>
+                    <option value="31536000">1 Year</option>
+                </select>
+                <button class="btn btn-s" onclick="addAg()"><i class="fas fa-plus"></i> ADD</button>
+            </div>
+        </div>
+        <div class="fr mb10">
+            <input id="search" placeholder="🔍  Search agent..." oninput="renderAg()" style="margin:0">
+            <select id="sort" onchange="renderAg()" style="max-width:130px;margin:0">
+                <option value="new">Newest</option><option value="old">Oldest</option><option value="exp">Expiring</option><option value="az">Name A-Z</option><option value="pr">Price ↓</option>
+            </select>
+        </div>
+        <div id="ag-list" class="ag-grid"></div>
+    </div>
+</div>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="mo" id="modal" onclick="event.target===this&&closeMod()">
+<div class="mb">
+    <div class="flex between mb12"><h3><i class="fas fa-pen-to-square" style="color:var(--p)"></i> Edit Agent</h3><button class="btn btn-ic btn-g" onclick="closeMod()"><i class="fas fa-xmark"></i></button></div>
+    <input type="hidden" id="e-id">
+    <label>UPI Deep Link</label><input id="e-pay" placeholder="upi://pay?pa=..." class="mb6">
+    <label>QR Image URL</label>
+    <div class="flex gap mb6" style="align-items:flex-start"><input id="e-qr" placeholder="https://..." oninput="pvQr()"><img id="e-qr-pv" class="img-pv"></div>
+    <label>Custom Message</label><input id="e-msg" class="mb6">
+    <label>Quick Extend</label>
+    <div class="ext-row">
+        <button class="btn btn-s btn-sm" onclick="ext(1)">+1D</button><button class="btn btn-s btn-sm" onclick="ext(7)">+7D</button>
+        <button class="btn btn-s btn-sm" onclick="ext(15)">+15D</button><button class="btn btn-s btn-sm" onclick="ext(30)">+1M</button>
+        <button class="btn btn-s btn-sm" onclick="ext(60)">+2M</button><button class="btn btn-s btn-sm" onclick="ext(120)">+4M</button>
+        <button class="btn btn-s btn-sm" onclick="ext(180)">+6M</button><button class="btn btn-s btn-sm" onclick="ext(365)">+1Y</button>
+    </div>
+    <div class="flex gap mb6"><button class="btn btn-p btn-full" onclick="saveEd()"><i class="fas fa-floppy-disk"></i> Save</button><button class="btn btn-full" id="btn-tog" onclick="togStatus()">Disable</button></div>
+    <div class="flex gap"><button class="btn btn-g btn-full btn-sm" onclick="openInv()"><i class="fas fa-file-pdf"></i> Invoice</button><button class="btn btn-g btn-full btn-sm" onclick="openTg()"><i class="fab fa-telegram"></i> Telegram</button><button class="btn btn-g btn-full btn-sm" onclick="openWa()"><i class="fab fa-whatsapp"></i> WhatsApp</button></div>
+</div>
+</div>
+
+<!-- ===== ID POPUP ===== -->
+<div class="idp" id="idp" onclick="event.target===this&&closeIdP()">
+<div class="idp-box">
+    <div class="flex between"><h3 id="idp-title"><i class="fas fa-list"></i> Agents</h3><button class="btn btn-ic btn-g" onclick="closeIdP()"><i class="fas fa-xmark"></i></button></div>
+    <div class="fr mb10"><input id="idp-q" placeholder="Search..." oninput="renderIdP()"><span class="bdg b-on" id="idp-cnt" style="white-space:nowrap">0</span></div>
+    <div class="idp-scroll" id="idp-list"></div>
+</div>
+</div>
+
+<!-- ===== INVOICE MODAL ===== -->
+<div class="mo" id="inv-mo" onclick="event.target===this&&closeInvM()">
+<div class="mb" style="max-width:560px">
+    <div class="flex between mb12"><h3><i class="fas fa-file-invoice" style="color:var(--w)"></i> Invoice</h3><button class="btn btn-ic btn-g" onclick="closeInvM()"><i class="fas fa-xmark"></i></button></div>
+    <div id="inv-box">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><h2>INVOICE</h2><p style="color:#7a7a9a;font-size:11px" id="inv-dt"></p><div class="inv-badge" style="margin-top:6px">PAID</div></div>
+            <div style="text-align:right"><div style="font-weight:900;font-size:16px;background:linear-gradient(135deg,#7c5cff,#00e5a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent">GOD MODE</div><p style="color:#7a7a9a;font-size:10px">Digital Access Service</p></div>
+        </div>
+        <hr class="inv-divider">
+        <p style="font-size:11px;color:#7a7a9a">Bill To:</p>
+        <p style="font-weight:800;font-size:15px;color:#1a1a2e" id="inv-name"></p>
+        <table><thead><tr><th>Description</th><th>Plan</th><th>Amount</th></tr></thead><tbody id="inv-tbody"></tbody></table>
+        
+        <!-- QR Section (Fixed) -->
+        <div id="inv-qr-section" style="display:none;margin-top:16px;padding:16px;background:#f8f8fc;border-radius:12px;border:1px solid #e8e8f0">
+            <div style="display:flex;align-items:center;gap:16px">
+                <div style="text-align:center">
+                    <p style="font-size:9px;color:#7a7a9a;margin-bottom:6px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px">SCAN TO PAY</p>
+                    <img id="inv-qr-img" crossorigin="anonymous" style="width:130px;height:130px;object-fit:contain;border-radius:10px;border:2px solid #e0e0e8;background:#fff;display:block">
+                </div>
+                <div style="flex:1">
+                    <p style="font-size:11px;color:#5a5a7a;font-weight:600;margin-bottom:4px">Payment QR Code</p>
+                    <p style="font-size:10px;color:#9a9ab0;line-height:1.5">Scan this QR code with any UPI app (Google Pay, PhonePe, Paytm) to make payment.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:14px">
+            <div style="text-align:right;background:#f0f0f8;padding:10px 18px;border-radius:10px">
+                <span style="color:#7a7a9a;font-size:12px">Total Amount: </span>
+                <span class="inv-total" id="inv-amt"></span>
+            </div>
+        </div>
+        <hr class="inv-divider">
+        <p class="inv-footer">Auto-generated invoice • Thank you for your payment!</p>
+    </div>
+    <div class="flex gap" style="margin-top:12px"><button class="btn btn-p btn-full" onclick="dlInv()"><i class="fas fa-download"></i> Download PDF</button><button class="btn btn-g btn-full" onclick="closeInvM()">Close</button></div>
+</div>
+</div>
+
+<!-- ===== TELEGRAM MODAL ===== -->
+<div class="mo" id="tg-mo" onclick="event.target===this&&closeTgM()">
+<div class="mb">
+    <div class="flex between mb12"><h3><i class="fab fa-telegram" style="color:#29b6f6"></i> Telegram</h3><button class="btn btn-ic btn-g" onclick="closeTgM()"><i class="fas fa-xmark"></i></button></div>
+    <label>Telegram Username</label><input id="tg-u" placeholder="@username" class="mb6">
+    <label>Template</label>
+    <select id="tg-t" onchange="updTgPv()" class="mb6"><option value="expiry">⚠️ Expiry (24h)</option><option value="expired">🚫 Expired</option><option value="welcome">🎉 Welcome</option><option value="renew">🔁 Renewal</option><option value="custom">✍️ Custom</option></select>
+    <textarea id="tg-c" rows="3" placeholder="Custom message..." style="display:none" oninput="updTgPv()" class="mb6"></textarea>
+    <label>Preview</label><div class="tg-pv" id="tg-pv"></div>
+    <button class="btn btn-s btn-full" onclick="sendTg()" style="margin-top:10px"><i class="fab fa-telegram"></i> Open Telegram & Send</button>
+</div>
+</div>
+
+<!-- ===== WHATSAPP MODAL ===== -->
+<div class="mo" id="wa-mo" onclick="event.target===this&&closeWaM()">
+<div class="mb">
+    <div class="flex between mb12"><h3><i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp</h3><button class="btn btn-ic btn-g" onclick="closeWaM()"><i class="fas fa-xmark"></i></button></div>
+    <label>Phone (with country code)</label><input id="wa-ph" placeholder="919876543210" class="mb6">
+    <label>Template</label>
+    <select id="wa-t" onchange="updWaPv()" class="mb6"><option value="expiry">⚠️ Expiry</option><option value="expired">🚫 Expired</option><option value="welcome">🎉 Welcome</option><option value="renew">🔁 Renewal</option><option value="custom">✍️ Custom</option></select>
+    <textarea id="wa-c" rows="3" placeholder="Custom message..." style="display:none" oninput="updWaPv()" class="mb6"></textarea>
+    <label>Preview</label><div class="tg-pv" id="wa-pv" style="background:#0b141a;border-color:#1a2e36"></div>
+    <button class="btn btn-full" onclick="sendWa()" style="margin-top:10px;background:#25d366;color:#fff;font-weight:800"><i class="fab fa-whatsapp"></i> Open WhatsApp & Send</button>
+</div>
+</div>
+
+<script>
+const firebaseConfig={databaseURL:"https://my-project-funowner-default-rtdb.firebaseio.com"};
+firebase.initializeApp(firebaseConfig);const db=firebase.database();
+
+let agents=[],requests=[],currentFilter='all',curId=null;
+let defPay="",defQr="",defTg="",todExp=0,knUTR={},aLog=[];
+let idPData=[],idPType='';
+let earnRange=7,growRange=15;
+let chE,chG,chP;
+
+// Clock
+setInterval(()=>{const n=new Date();document.getElementById('clk').textContent=n.toLocaleTimeString('en-IN',{hour12:false})+' • '+n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})},1000);
+
+function init(){
+    db.ref("Config").on("value",s=>{const d=s.val()||{};defPay=d.gateway||"";defQr=d.qr_url||"";defTg=d.telegram_id||"";todExp=parseInt(d.todayExpense||0);document.getElementById("g-pay").value=defPay;document.getElementById("g-qr").value=defQr;document.getElementById("g-tg").value=defTg;document.getElementById("g-exp").value=todExp||"";upStats()});
+    db.ref("Agents").on("value",s=>{agents=[];const d=s.val();if(d)Object.keys(d).forEach(k=>agents.push({id:k,...d[k]}));agents.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));upStats();renderAg();checkAlerts();upCharts()});
+    db.ref("PaymentRequests").on("value",s=>{requests=[];knUTR={};const d=s.val();if(d)Object.keys(d).forEach(k=>{const r={key:k,...d[k]};if(knUTR[r.utr]){r.ff=true;const o=requests.find(x=>x.utr===r.utr);if(o)o.ff=true}knUTR[r.utr]=(knUTR[r.utr]||0)+1;requests.push(r)});renderRq();checkAlerts()});
+    db.ref("ActivityLog").orderByChild("time").limitToLast(30).on("value",s=>{aLog=[];const d=s.val();if(d)Object.keys(d).forEach(k=>aLog.push({key:k,...d[k]}));aLog.sort((a,b)=>(b.time||0)-(a.time||0));renderLog()});
+}
+
+// ===== STATS =====
+function upStats(){
+    const now=Date.now(),ts=new Date().setHours(0,0,0,0),ms=new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime();
+    const weekAgo=now-7*864e5;
+    let act=0,exp=0,tod=0,week=0,tin=0,mRev=0,tRev=0;
+    agents.forEach(a=>{const p=parseInt(a.price||0),c=a.createdAt||0;if(a.enabled&&a.endTime>now)act++;else exp++;if(c>=ts){tod++;tin+=p}if(c>=weekAgo)week++;if(c>=ms)mRev+=p;tRev+=p});
+    const net=tin-todExp,total=agents.length||1;
+    document.getElementById("s-act").textContent=act;document.getElementById("s-exp").textContent=exp;document.getElementById("s-tod").textContent=tod;
+    document.getElementById("s-week").textContent=week;
+    document.getElementById("s-tin").textContent="₹"+tin.toLocaleString();document.getElementById("s-tex").textContent="₹"+todExp.toLocaleString();
+    const sn=document.getElementById("s-net");sn.textContent=(net>=0?"₹":"-₹")+Math.abs(net).toLocaleString();sn.style.color=net>=0?"var(--c2)":"var(--d)";
+    document.getElementById("s-total").textContent="₹"+tRev.toLocaleString();document.getElementById("s-mon").textContent="₹"+mRev.toLocaleString();
+    // Progress bars
+    document.getElementById("bar-act").style.width=Math.round(act/total*100)+"%";
+    document.getElementById("bar-net").style.width=tin>0?Math.min(100,Math.round(net/tin*100))+"%":"0%";
+    document.getElementById("bar-total").style.width=tRev>0?"100%":"0%";
+    document.getElementById("bar-mon").style.width=tRev>0?Math.round(mRev/tRev*100)+"%":"0%";
+}
+
+// ===== ALERTS =====
+function checkAlerts(){
+    const now=Date.now(),al=[];
+    agents.forEach(a=>{if(a.enabled&&a.endTime>now&&(a.endTime-now)<864e5){const m=Math.round((a.endTime-now)/6e4);al.push({t:'expiry',tx:`${a.id} expires in ${m>60?Math.round(m/60)+'h':m+'m'}`,ic:'fa-clock'})}});
+    Object.keys(knUTR).forEach(u=>{if(knUTR[u]>1)al.push({t:'fraud',tx:`Dup UTR: ${u}`,ic:'fa-shield-halved'})});
+    if(requests.length)al.push({t:'pay',tx:`${requests.length} payment(s) pending`,ic:'fa-bell'});
+    const bar=document.getElementById('alt-bar'),pills=document.getElementById('alt-pills');
+    if(al.length){bar.style.display='block';pills.innerHTML=al.map(a=>`<div class="ap ${a.t}"><i class="fas ${a.ic}"></i> ${a.tx}</div>`).join('')}else bar.style.display='none';
+}
+
+// ===== CHARTS WITH TIME FILTERS =====
+function setEarnRange(d){earnRange=d;document.querySelectorAll('#earn-filters .ch-f').forEach(e=>{e.classList.toggle('active',parseInt(e.dataset.range)===d)});upCharts()}
+function setGrowRange(d){growRange=d;document.querySelectorAll('#grow-filters .ch-f').forEach(e=>{e.classList.toggle('active',parseInt(e.dataset.range)===d)});upCharts()}
+
+function upCharts(){
+    const now=new Date(),font={family:"'Outfit',sans-serif",size:10,weight:'600'},gc='rgba(255,255,255,.04)',tc='#6070a0';
+
+    // === EARNINGS ===
+    const eLabels=[],eData=[];
+    for(let i=earnRange-1;i>=0;i--){
+        const d=new Date(now);d.setDate(d.getDate()-i);
+        const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),de=ds+864e5;
+        if(earnRange<=7) eLabels.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+        else if(earnRange<=15) eLabels.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+        else eLabels.push(d.getDate()+'');
+        let r=0;agents.forEach(a=>{const c=a.createdAt||0;if(c>=ds&&c<de)r+=parseInt(a.price||0)});eData.push(r);
+    }
+    const ctx1=document.getElementById('ch-e').getContext('2d');
+    if(chE)chE.destroy();
+    const g1=ctx1.createLinearGradient(0,0,0,200);g1.addColorStop(0,'rgba(0,255,179,.2)');g1.addColorStop(1,'rgba(0,255,179,0)');
+    chE=new Chart(ctx1,{type:'line',data:{labels:eLabels,datasets:[
+        {data:eData,borderColor:'#00ffb3',backgroundColor:g1,fill:true,tension:.45,pointRadius:earnRange<=7?5:earnRange<=15?3:2,pointBackgroundColor:'#00ffb3',pointBorderColor:'#030308',pointBorderWidth:2,borderWidth:2.5}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#161628',titleColor:'#00ffb3',bodyColor:'#ededf8',borderColor:'#28284a',borderWidth:1,cornerRadius:10,padding:10,displayColors:false,callbacks:{label:ctx=>'₹'+ctx.parsed.y.toLocaleString()}}},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,font,maxRotation:0}},y:{grid:{color:gc},ticks:{color:tc,font,callback:v=>'₹'+v}}},interaction:{intersect:false,mode:'index'}}});
+
+    // === GROWTH ===
+    const gLabels=[],gData=[];
+    for(let i=growRange-1;i>=0;i--){
+        const d=new Date(now);d.setDate(d.getDate()-i);
+        const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),de=ds+864e5;
+        gLabels.push(growRange<=15?d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):d.getDate()+'');
+        let c=0;agents.forEach(a=>{if((a.createdAt||0)>=ds&&(a.createdAt||0)<de)c++});gData.push(c);
+    }
+    const ctx2=document.getElementById('ch-g').getContext('2d');
+    if(chG)chG.destroy();
+    const g2=ctx2.createLinearGradient(0,0,0,200);g2.addColorStop(0,'rgba(124,92,255,.65)');g2.addColorStop(1,'rgba(124,92,255,.1)');
+    chG=new Chart(ctx2,{type:'bar',data:{labels:gLabels,datasets:[{data:gData,backgroundColor:g2,borderRadius:8,borderSkipped:false,barThickness:growRange<=7?22:growRange<=15?14:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#161628',borderColor:'#28284a',borderWidth:1,cornerRadius:10,padding:10}},scales:{x:{grid:{display:false},ticks:{color:tc,font,maxRotation:0}},y:{grid:{color:gc},ticks:{color:tc,font,stepSize:1}}}}});
+
+    // === PIE ===
+    const nw=Date.now();let aC=0,eC=0;agents.forEach(a=>{if(a.enabled&&a.endTime>nw)aC++;else eC++});
+    const ctx3=document.getElementById('ch-p').getContext('2d');
+    if(chP)chP.destroy();
+    chP=new Chart(ctx3,{type:'doughnut',data:{labels:['Active','Expired'],datasets:[{data:[aC,eC],backgroundColor:['#00ffb3','#ff3d6b'],borderColor:'#0b0b16',borderWidth:4,hoverOffset:10}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:tc,font:{...font,size:11},padding:14,usePointStyle:true,pointStyleWidth:10}}}}});
+}
+
+// ===== RENDER AGENTS =====
+function renderAg(){
+    const q=document.getElementById("search").value.toLowerCase(),s=document.getElementById("sort").value,list=document.getElementById("ag-list");list.innerHTML="";const now=Date.now();
+    let f=agents.filter(a=>{if(!a.id.toLowerCase().includes(q))return false;if(currentFilter==='active')return a.enabled&&a.endTime>now;if(currentFilter==='expired')return!a.enabled||now>a.endTime;return true});
+    switch(s){case'old':f.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));break;case'exp':f.sort((a,b)=>(a.endTime||0)-(b.endTime||0));break;case'az':f.sort((a,b)=>a.id.localeCompare(b.id));break;case'pr':f.sort((a,b)=>parseInt(b.price||0)-parseInt(a.price||0));break;default:f.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))}
+
+    f.forEach(a=>{
+        const ie=!a.enabled||now>a.endTime,diff=a.endTime-now,is24=!ie&&diff<864e5;
+        const totalDur=a.endTime-(a.createdAt||a.endTime);const elapsed=now-(a.createdAt||now);
+        const pct=ie?0:Math.max(0,Math.min(100,Math.round((1-elapsed/totalDur)*100)));
+        const d=document.createElement("div");d.className="ag"+(is24?" soon":"");
+        d.innerHTML=`
+            <div class="flex between mb6"><span style="font-weight:800;font-size:13px">${a.id}</span><span class="bdg ${ie?'b-off':'b-on'}">${ie?'EXPIRED':'ACTIVE'}</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${a.planName||'Plan'} • ₹${a.price||0}</div>
+            <div style="font-size:11px;color:${ie?'var(--d)':'var(--a)'};font-weight:600;margin-bottom:2px">${ie?'⛔ Ended':'⏳ '+fmtTime(diff)}</div>
+            <div class="ag-prog"><div class="ag-prog-fill" style="width:${pct}%;background:${pct>30?'var(--a)':pct>10?'var(--w)':'var(--d)'}"></div></div>
+            <div class="ag-acts">
+                <button class="btn btn-ic btn-sm btn-s" onclick="openTgFor('${a.id}')" title="Telegram"><i class="fab fa-telegram"></i></button>
+                <button class="btn btn-ic btn-sm btn-g" onclick="openWaFor('${a.id}')" title="WhatsApp"><i class="fab fa-whatsapp" style="color:#25d366"></i></button>
+                <button class="btn btn-ic btn-sm btn-g" onclick="cpTxt('${a.id}')" title="Copy"><i class="fas fa-copy"></i></button>
+                <button class="btn btn-ic btn-sm btn-p" onclick="edit('${a.id}')" title="Edit"><i class="fas fa-cog"></i></button>
+                <button class="btn btn-ic btn-sm btn-g" onclick="openInvFor('${a.id}')" title="Invoice"><i class="fas fa-file-invoice"></i></button>
+                <button class="btn btn-ic btn-sm btn-d" onclick="delAg('${a.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>`;
+        list.appendChild(d);
+    });
+    if(!f.length)list.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:35px;color:var(--dim);font-size:12px">No agents found</div>`;
+}
+
+function fmtTime(ms){if(ms<=0)return'Expired';const s=Math.floor(ms/1000);if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';return Math.ceil(s/86400)+' days'}
+setInterval(()=>{if(agents.length)renderAg()},30000);
+
+// ===== RENDER REQUESTS =====
+function renderRq(){
+    const box=document.getElementById("rq-list");box.innerHTML="";document.getElementById("rq-cnt").textContent=requests.length;
+    requests.forEach(r=>{const f=r.ff;const d=document.createElement("div");d.className="rq"+(f?" fraud":"");
+    d.innerHTML=`<div class="flex between mb6"><span style="font-weight:700">${r.agentId}</span><div class="flex gap">${f?'<span class="fraud-t"><i class="fas fa-skull-crossbones"></i> FRAUD?</span>':''}<span style="color:var(--a);font-weight:800">₹${r.amount}</span></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:7px">UTR: <span class="utr-m" onclick="cpTxt('${r.utr}')">${r.utr}</span>${f?'<span style="color:var(--d);font-size:9px;margin-left:5px">⚠ Duplicate!</span>':''}</div>
+    <div class="flex gap"><button class="btn btn-s btn-sm" onclick="appRq('${r.key}','${r.agentId}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-d btn-sm" onclick="rejRq('${r.key}')"><i class="fas fa-xmark"></i> Reject</button></div>`;box.prepend(d)});
+    if(!requests.length)box.innerHTML=`<div style="text-align:center;padding:25px;color:var(--dim);font-size:11px">No Requests</div>`;
+}
+
+// ===== ACTIVITY LOG =====
+function renderLog(){
+    const box=document.getElementById("act-log");if(!aLog.length){box.innerHTML=`<div style="text-align:center;padding:18px;color:var(--dim);font-size:11px">No activity</div>`;return}
+    const cl={add:'var(--a)',delete:'var(--d)',approve:'var(--s)',extend:'var(--p)',config:'var(--w)'};
+    box.innerHTML=aLog.slice(0,20).map(l=>`<div class="log-i"><div class="log-d" style="background:${cl[l.type]||'var(--muted)'}"></div><div><div style="font-weight:600;font-size:11px">${l.msg||''}</div><div style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace">${new Date(l.time).toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div></div></div>`).join('');
+}
+function logAct(t,m){db.ref("ActivityLog").push({type:t,msg:m,time:Date.now()})}
+
+// ===== POPUPS =====
+function showTodayPopup(){const ts=new Date().setHours(0,0,0,0);idPData=agents.filter(a=>(a.createdAt||0)>=ts);idPType='today';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-plus" style="color:var(--c)"></i> Today\'s Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
+function showExpiredPopup(){const now=Date.now();idPData=agents.filter(a=>!a.enabled||now>a.endTime);idPType='expired';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-xmark" style="color:var(--d)"></i> Expired Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
+
+// Last 7 Days Active Agents
+function showWeekPopup(){
+    const weekAgo=Date.now()-7*864e5;
+    idPData=agents.filter(a=>(a.createdAt||0)>=weekAgo);
+    idPType='week';
+    document.getElementById('idp-title').innerHTML='<i class="fas fa-calendar-week" style="color:var(--o)"></i> Last 7 Days Agents';
+    document.getElementById('idp-q').value='';
+    document.getElementById('idp').style.display='flex';
+    renderIdP();
+}
+function renderIdP(){
+    const q=document.getElementById('idp-q').value.toLowerCase(),f=idPData.filter(a=>a.id.toLowerCase().includes(q));
+    document.getElementById('idp-cnt').textContent=f.length;const list=document.getElementById('idp-list');
+    if(!f.length){list.innerHTML=`<div style="text-align:center;padding:30px;color:var(--dim);font-size:11px">No agents</div>`;return}
+    const now=Date.now();list.innerHTML=f.map(a=>{const ie=!a.enabled||now>a.endTime;
+    return`<div class="idi"><div><div style="font-weight:700;font-size:13px">${a.id}</div><div style="font-size:10px;color:var(--muted)">${a.planName||'Plan'} • ₹${a.price||0} • <span style="color:${ie?'var(--d)':'var(--a)'}">${ie?'Expired':fmtTime(a.endTime-now)}</span></div></div>
+    <div class="flex gap"><button class="btn btn-ic btn-sm btn-p" onclick="closeIdP();edit('${a.id}')"><i class="fas fa-cog"></i></button><button class="btn btn-ic btn-sm btn-g" onclick="cpTxt('${a.id}')"><i class="fas fa-copy"></i></button><button class="btn btn-ic btn-sm btn-s" onclick="closeIdP();openTgFor('${a.id}')"><i class="fab fa-telegram"></i></button></div></div>`}).join('')}
+function closeIdP(){document.getElementById('idp').style.display='none'}
+
+// ===== ACTIONS =====
+function addAg(){const id=document.getElementById("n-id").value.trim().replace(/\./g,'_');if(!id)return toast('Enter Agent ID','w');const pl=document.getElementById("n-pl"),dur=parseInt(pl.value),nm=pl.options[pl.selectedIndex].text,pr=document.getElementById("n-pr").value;
+db.ref("Agents/"+id).once("value",s=>{const now=Date.now();let end=now+(dur*1000);if(s.exists()&&s.val().endTime>now)end=s.val().endTime+(dur*1000);
+db.ref("Agents/"+id).update({enabled:true,endTime:end,createdAt:s.exists()?s.val().createdAt:now,planName:nm,price:pr,paylink:defPay,qr_url:defQr,message:"Renew Now"});
+document.getElementById("n-id").value="";document.getElementById("n-pr").value="";toast(`✅ ${id} added (${nm})`,'s');logAct('add',`Added ${id} — ${nm} ₹${pr}`)})}
+
+function appRq(k,id){const d=prompt("Approve "+id+"?\nDays:","30");if(!d)return;db.ref("Agents/"+id).once("value",s=>{const now=Date.now();let b=(s.exists()&&s.val().endTime>now)?s.val().endTime:now;db.ref("Agents/"+id).update({enabled:true,endTime:b+(parseInt(d)*864e5),message:"Access Granted"});db.ref("PaymentRequests/"+k).remove();toast(`✅ ${id} +${d}d`,'s');logAct('approve',`Approved ${id} ${d}d`)})}
+function saveCfg(){db.ref("Config").update({gateway:document.getElementById("g-pay").value,qr_url:document.getElementById("g-qr").value,telegram_id:document.getElementById("g-tg").value});toast('⚙️ Saved!','s');logAct('config','Config updated')}
+function saveExp(){const v=parseInt(document.getElementById("g-exp").value||0);db.ref("Config").update({todayExpense:v});toast('💸 ₹'+v,'s')}
+
+// Edit
+function edit(id){curId=id;const a=agents.find(x=>x.id===id);document.getElementById("e-pay").value=a.paylink||"";document.getElementById("e-qr").value=a.qr_url||"";document.getElementById("e-msg").value=a.message||"";const b=document.getElementById("btn-tog");b.innerHTML=a.enabled?'🚫 Disable':'✅ Enable';b.className=a.enabled?"btn btn-d btn-full":"btn btn-s btn-full";document.getElementById("modal").style.display="flex";pvQr()}
+function saveEd(){db.ref("Agents/"+curId).update({paylink:document.getElementById("e-pay").value,qr_url:document.getElementById("e-qr").value,message:document.getElementById("e-msg").value});closeMod();toast('💾 Saved!','s')}
+function ext(d){const a=agents.find(x=>x.id===curId),now=Date.now(),b=a.endTime>now?a.endTime:now;db.ref("Agents/"+curId).update({enabled:true,endTime:b+(d*864e5)});closeMod();toast(`⏳ +${d}d ${curId}`,'s');logAct('extend',`+${d}d ${curId}`)}
+function togStatus(){const a=agents.find(x=>x.id===curId);db.ref("Agents/"+curId).update({enabled:!a.enabled});closeMod();toast(a.enabled?'🚫 Off':'✅ On','s')}
+function bulkDel(){if(!confirm("Delete ALL Expired?"))return;const now=Date.now(),u={};agents.forEach(a=>{if(!a.enabled||now>a.endTime)u[a.id]=null});db.ref("Agents").update(u);toast('🗑️ Done','s');logAct('delete','Bulk deleted')}
+function filterTab(t){currentFilter=currentFilter===t?'all':t;document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));if(currentFilter!=='all'){const el=document.getElementById('tab-'+{active:'active',expired:'exp'}[currentFilter]);if(el)el.classList.add('on')}document.getElementById("btn-del").style.display=currentFilter==='expired'?'inline-flex':'none';renderAg()}
+
+// Export
+function exportCSV(){const now=Date.now();let c="ID,Plan,Price,Status,Days Left,Created\n";agents.forEach(a=>{const ie=!a.enabled||now>a.endTime;c+=`${a.id},${a.planName||''},${a.price||0},${ie?'Expired':'Active'},${ie?0:Math.ceil((a.endTime-now)/864e5)},${new Date(a.createdAt||0).toLocaleDateString()}\n`});const b=new Blob([c],{type:'text/csv'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='agents.csv';l.click();toast('📥 Exported!','s')}
+
+// ===== INVOICE (WITH QR FIXED!) =====
+function openInv(){openInvFor(curId)}
+function openInvFor(id){
+    const a=agents.find(x=>x.id===id);if(!a)return;
+    document.getElementById("inv-dt").textContent="Date: "+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById("inv-name").textContent=a.id;
+    document.getElementById("inv-tbody").innerHTML=`<tr><td>Digital Access Subscription</td><td>${a.planName||'Plan'}</td><td style="font-weight:800">₹${a.price||0}</td></tr>`;
+    document.getElementById("inv-amt").textContent="₹"+(a.price||0);
+    // QR Fix - preload image properly
+    const qrUrl=a.qr_url||defQr;
+    const qrSec=document.getElementById("inv-qr-section");
+    const qrImg=document.getElementById("inv-qr-img");
+    if(qrUrl&&qrUrl.trim()!==''){
+        qrSec.style.display="block";
+        // Create fresh image to avoid cache issues
+        const tempImg=new Image();
+        tempImg.crossOrigin="anonymous";
+        tempImg.onload=function(){
+            qrImg.src=this.src;
+            qrImg.style.display="block";
+        };
+        tempImg.onerror=function(){
+            // Fallback: try without crossorigin
+            qrImg.removeAttribute('crossorigin');
+            qrImg.src=qrUrl;
+            qrImg.style.display="block";
+        };
+        tempImg.src=qrUrl;
+    }else{
+        qrSec.style.display="none";
+    }
+    document.getElementById("inv-mo").style.display="flex";closeMod();
+}
+function dlInv(){
+    // Wait a moment for QR image to render
+    toast('⏳ Generating PDF...','i');
+    setTimeout(()=>{
+        html2pdf().set({
+            margin:.4,
+            filename:'Invoice_'+(document.getElementById("inv-name").textContent||'agent')+'.pdf',
+            image:{type:'jpeg',quality:.98},
+            html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false},
+            jsPDF:{unit:'in',format:'a5',orientation:'portrait'}
+        }).from(document.getElementById("inv-box")).save().then(()=>{
+            toast('📄 PDF Downloaded!','s');
+        });
+    },500);
+}
+function closeInvM(){document.getElementById("inv-mo").style.display="none"}
+
+// ===== TELEGRAM =====
+function openTg(){openTgFor(curId)}
+function openTgFor(id){const a=agents.find(x=>x.id===id);if(!a)return;curId=id;document.getElementById("tg-u").value=defTg;document.getElementById("tg-t").value='expiry';document.getElementById("tg-c").style.display='none';updTgPv();document.getElementById("tg-mo").style.display="flex";closeMod()}
+function msgTpl(t,a,ce){const n=a?a.id:'User',p=a?(a.planName||'Plan'):'Plan',l=a?(a.paylink||'Contact admin'):'';if(t==='custom')return ce?ce.value:'';return{expiry:`Hello ${n},\n\n⚠️ Your plan "${p}" expires in 24h!\n\n🔄 Renew now:\n👉 ${l}\n\nContact for help.`,expired:`Hello ${n},\n\n🚫 Plan "${p}" expired.\n\nRenew:\n👉 ${l}`,welcome:`🎉 Welcome ${n}!\n\nPlan "${p}" is ACTIVE.\n\nEnjoy!`,renew:`Hello ${n},\n\n🔁 Renew "${p}"!\n\n👉 ${l}\n\nThank you!`}[t]||''}
+function updTgPv(){const a=agents.find(x=>x.id===curId),t=document.getElementById("tg-t").value;document.getElementById("tg-c").style.display=t==='custom'?'block':'none';document.getElementById("tg-pv").textContent=msgTpl(t,a,document.getElementById("tg-c"))}
+function sendTg(){const u=document.getElementById("tg-u").value.trim();if(!u)return toast('Enter username','w');window.open(`https://t.me/${u.replace('@','')}?text=${encodeURIComponent(document.getElementById("tg-pv").textContent)}`,'_blank');toast('📨 Telegram...','s');closeTgM()}
+function closeTgM(){document.getElementById("tg-mo").style.display="none"}
+
+// ===== WHATSAPP =====
+function openWa(){openWaFor(curId)}
+function openWaFor(id){const a=agents.find(x=>x.id===id);if(!a)return;curId=id;document.getElementById("wa-ph").value='';document.getElementById("wa-t").value='expiry';document.getElementById("wa-c").style.display='none';updWaPv();document.getElementById("wa-mo").style.display="flex";closeMod()}
+function updWaPv(){const a=agents.find(x=>x.id===curId),t=document.getElementById("wa-t").value;document.getElementById("wa-c").style.display=t==='custom'?'block':'none';document.getElementById("wa-pv").textContent=msgTpl(t,a,document.getElementById("wa-c"))}
+function sendWa(){const p=document.getElementById("wa-ph").value.trim();if(!p)return toast('Enter phone','w');window.open(`https://wa.me/${p}?text=${encodeURIComponent(document.getElementById("wa-pv").textContent)}`,'_blank');toast('📨 WhatsApp...','s');closeWaM()}
+function closeWaM(){document.getElementById("wa-mo").style.display="none"}
+
+// Utils
+function pvQr(){const u=document.getElementById("e-qr").value,i=document.getElementById("e-qr-pv");if(u){i.src=u;i.style.display="block"}else i.style.display="none"}
+function cpTxt(t){navigator.clipboard.writeText(t);toast('📋 Copied!','i')}
+function delAg(id){if(confirm("Delete "+id+"?")){db.ref("Agents/"+id).remove();toast('🗑️ Deleted','s');logAct('delete',`Del ${id}`)}}
+function rejRq(k){if(confirm("Reject?")){db.ref("PaymentRequests/"+k).remove();toast('❌ Rejected','i')}}
+function closeMod(){document.getElementById("modal").style.display="none"}
+
+function toast(m,t='i'){const c={s:'var(--a)',w:'var(--w)',i:'var(--p)',e:'var(--d)'};const el=document.createElement('div');el.className='tt';el.style.borderLeft=`3px solid ${c[t]||c.i}`;el.innerHTML=`<span>${m}</span>`;document.getElementById('toasts').appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},3000)}
+
+init();
+</script>
+</body>
+</html>
