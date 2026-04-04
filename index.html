@@ -7,7 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -369,7 +369,7 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <button class="btn btn-s btn-sm" onclick="ext(180)">+6M</button><button class="btn btn-s btn-sm" onclick="ext(365)">+1Y</button>
     </div>
     <div class="flex gap mb6"><button class="btn btn-p btn-full" onclick="saveEd()"><i class="fas fa-floppy-disk"></i> Save</button><button class="btn btn-full" id="btn-tog" onclick="togStatus()">Disable</button></div>
-    <div class="flex gap"><button class="btn btn-g btn-full btn-sm" onclick="openInv()"><i class="fas fa-file-pdf"></i> Invoice</button><button class="btn btn-g btn-full btn-sm" onclick="openTg()"><i class="fab fa-telegram"></i> Telegram</button><button class="btn btn-g btn-full btn-sm" onclick="openWa()"><i class="fab fa-whatsapp"></i> WhatsApp</button></div>
+    <div class="flex gap"><button class="btn btn-g btn-full btn-sm" onclick="openInv()"><i class="fas fa-image"></i> Invoice</button><button class="btn btn-g btn-full btn-sm" onclick="openTg()"><i class="fab fa-telegram"></i> Telegram</button><button class="btn btn-g btn-full btn-sm" onclick="openWa()"><i class="fab fa-whatsapp"></i> WhatsApp</button></div>
 </div>
 </div>
 
@@ -419,7 +419,7 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <hr class="inv-divider">
         <p class="inv-footer">Auto-generated invoice • Thank you for your payment!</p>
     </div>
-    <div class="flex gap" style="margin-top:12px"><button class="btn btn-p btn-full" onclick="dlInv()"><i class="fas fa-download"></i> Download PDF</button><button class="btn btn-g btn-full" onclick="closeInvM()">Close</button></div>
+    <div class="flex gap" style="margin-top:12px"><button class="btn btn-p btn-full" onclick="dlInv()"><i class="fas fa-image"></i> Download Image</button><button class="btn btn-g btn-full" onclick="closeInvM()">Close</button></div>
 </div>
 </div>
 
@@ -671,19 +671,26 @@ function openInvFor(id){
     document.getElementById("inv-mo").style.display="flex";closeMod();
 }
 function dlInv(){
-    // Wait a moment for QR image to render
-    toast('⏳ Generating PDF...','i');
+    toast('⏳ Generating Image...','i');
+    const el=document.getElementById("inv-box");
     setTimeout(()=>{
-        html2pdf().set({
-            margin:.4,
-            filename:'Invoice_'+(document.getElementById("inv-name").textContent||'agent')+'.pdf',
-            image:{type:'jpeg',quality:.98},
-            html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false},
-            jsPDF:{unit:'in',format:'a5',orientation:'portrait'}
-        }).from(document.getElementById("inv-box")).save().then(()=>{
-            toast('📄 PDF Downloaded!','s');
+        html2canvas(el,{
+            scale:3,
+            useCORS:true,
+            allowTaint:true,
+            backgroundColor:'#ffffff',
+            logging:false
+        }).then(canvas=>{
+            const link=document.createElement('a');
+            link.download='Invoice_'+(document.getElementById("inv-name").textContent||'agent')+'.png';
+            link.href=canvas.toDataURL('image/png',1.0);
+            link.click();
+            toast('🖼️ Image Downloaded!','s');
+        }).catch(err=>{
+            console.error(err);
+            toast('❌ Error generating image','e');
         });
-    },500);
+    },600);
 }
 function closeInvM(){document.getElementById("inv-mo").style.display="none"}
 
