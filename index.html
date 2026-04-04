@@ -201,11 +201,11 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <div class="sc-vl" style="color:var(--a)" id="s-act">0</div>
         <div class="sc-bar"><div class="sc-bar-fill" id="bar-act" style="background:var(--a);width:0%"></div></div>
     </div>
-    <div class="sc click" onclick="showExpiredPopup()" id="tab-exp" style="--scc:var(--d)">
+    <div class="sc click" onclick="filterTab('expired')" id="tab-exp" style="--scc:var(--d)">
         <div class="sc-ic" style="background:rgba(255,61,107,.08);color:var(--d)"><i class="fas fa-user-xmark"></i></div>
         <div class="sc-lb">Expired / Off</div>
         <div class="sc-vl" style="color:var(--d)" id="s-exp">0</div>
-        <div class="sc-sub">Tap to view all →</div>
+        <div class="sc-sub">Tap to filter ↓</div>
     </div>
     <div class="sc click" onclick="showTodayPopup()" id="tab-tod" style="--scc:var(--c)">
         <div class="sc-ic" style="background:rgba(0,212,255,.08);color:var(--c)"><i class="fas fa-user-plus"></i></div>
@@ -321,6 +321,7 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
             <span><i class="fas fa-database" style="color:var(--p)"></i> Agent Database</span>
             <div class="flex gap">
                 <button class="btn btn-g btn-sm" onclick="exportCSV()"><i class="fas fa-download"></i> Export</button>
+                <button class="btn btn-w btn-sm" onclick="showExpiredPopup()" id="btn-view-exp" style="display:none"><i class="fas fa-eye"></i> View All</button>
                 <button class="btn btn-d btn-sm" onclick="bulkDel()" id="btn-del" style="display:none"><i class="fas fa-trash"></i> Expired</button>
             </div>
         </div>
@@ -469,21 +470,41 @@ function init(){
     db.ref("ActivityLog").orderByChild("time").limitToLast(30).on("value",s=>{aLog=[];const d=s.val();if(d)Object.keys(d).forEach(k=>aLog.push({key:k,...d[k]}));aLog.sort((a,b)=>(b.time||0)-(a.time||0));renderLog()});
 }
 
+// Safe expired check helper
+function isExpAgent(a){
+    if(!a) return true;
+    if(a.enabled===false) return true;
+    if(!a.endTime) return true;
+    return Date.now() > a.endTime;
+}
+
 // ===== STATS =====
 function upStats(){
     const now=Date.now(),ts=new Date().setHours(0,0,0,0),ms=new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime();
     const weekAgo=now-7*864e5;
     let act=0,exp=0,tod=0,week=0,tin=0,mRev=0,tRev=0;
-    agents.forEach(a=>{const p=parseInt(a.price||0),c=a.createdAt||0;if(a.enabled&&a.endTime>now)act++;else exp++;if(c>=ts){tod++;tin+=p}if(c>=weekAgo)week++;if(c>=ms)mRev+=p;tRev+=p});
+    agents.forEach(a=>{
+        const p=parseInt(a.price||0),c=a.createdAt||0;
+        if(isExpAgent(a)) exp++; else act++;
+        if(c>=ts){tod++;tin+=p}
+        if(c>=weekAgo) week++;
+        if(c>=ms) mRev+=p;
+        tRev+=p;
+    });
     const net=tin-todExp,total=agents.length||1;
-    document.getElementById("s-act").textContent=act;document.getElementById("s-exp").textContent=exp;document.getElementById("s-tod").textContent=tod;
+    document.getElementById("s-act").textContent=act;
+    document.getElementById("s-exp").textContent=exp;
+    document.getElementById("s-tod").textContent=tod;
     document.getElementById("s-week").textContent=week;
-    document.getElementById("s-tin").textContent="₹"+tin.toLocaleString();document.getElementById("s-tex").textContent="₹"+todExp.toLocaleString();
-    const sn=document.getElementById("s-net");sn.textContent=(net>=0?"₹":"-₹")+Math.abs(net).toLocaleString();sn.style.color=net>=0?"var(--c2)":"var(--d)";
-    document.getElementById("s-total").textContent="₹"+tRev.toLocaleString();document.getElementById("s-mon").textContent="₹"+mRev.toLocaleString();
-    // Progress bars
+    document.getElementById("s-tin").textContent="₹"+tin.toLocaleString();
+    document.getElementById("s-tex").textContent="₹"+todExp.toLocaleString();
+    const sn=document.getElementById("s-net");
+    sn.textContent=(net>=0?"₹":"-₹")+Math.abs(net).toLocaleString();
+    sn.style.color=net>=0?"var(--c2)":"var(--d)";
+    document.getElementById("s-total").textContent="₹"+tRev.toLocaleString();
+    document.getElementById("s-mon").textContent="₹"+mRev.toLocaleString();
     document.getElementById("bar-act").style.width=Math.round(act/total*100)+"%";
-    document.getElementById("bar-net").style.width=tin>0?Math.min(100,Math.round(net/tin*100))+"%":"0%";
+    document.getElementById("bar-net").style.width=tin>0?Math.min(100,Math.round(Math.max(0,net)/tin*100))+"%":"0%";
     document.getElementById("bar-total").style.width=tRev>0?"100%":"0%";
     document.getElementById("bar-mon").style.width=tRev>0?Math.round(mRev/tRev*100)+"%":"0%";
 }
@@ -491,7 +512,12 @@ function upStats(){
 // ===== ALERTS =====
 function checkAlerts(){
     const now=Date.now(),al=[];
-    agents.forEach(a=>{if(a.enabled&&a.endTime>now&&(a.endTime-now)<864e5){const m=Math.round((a.endTime-now)/6e4);al.push({t:'expiry',tx:`${a.id} expires in ${m>60?Math.round(m/60)+'h':m+'m'}`,ic:'fa-clock'})}});
+    agents.forEach(a=>{
+        if(!isExpAgent(a)&&a.endTime&&(a.endTime-now)<864e5&&(a.endTime-now)>0){
+            const m=Math.round((a.endTime-now)/6e4);
+            al.push({t:'expiry',tx:`${a.id} expires in ${m>60?Math.round(m/60)+'h':m+'m'}`,ic:'fa-clock'});
+        }
+    });
     Object.keys(knUTR).forEach(u=>{if(knUTR[u]>1)al.push({t:'fraud',tx:`Dup UTR: ${u}`,ic:'fa-shield-halved'})});
     if(requests.length)al.push({t:'pay',tx:`${requests.length} payment(s) pending`,ic:'fa-bell'});
     const bar=document.getElementById('alt-bar'),pills=document.getElementById('alt-pills');
@@ -537,7 +563,7 @@ function upCharts(){
     chG=new Chart(ctx2,{type:'bar',data:{labels:gLabels,datasets:[{data:gData,backgroundColor:g2,borderRadius:8,borderSkipped:false,barThickness:growRange<=7?22:growRange<=15?14:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#161628',borderColor:'#28284a',borderWidth:1,cornerRadius:10,padding:10}},scales:{x:{grid:{display:false},ticks:{color:tc,font,maxRotation:0}},y:{grid:{color:gc},ticks:{color:tc,font,stepSize:1}}}}});
 
     // === PIE ===
-    const nw=Date.now();let aC=0,eC=0;agents.forEach(a=>{if(a.enabled&&a.endTime>nw)aC++;else eC++});
+    let aC=0,eC=0;agents.forEach(a=>{if(isExpAgent(a))eC++;else aC++});
     const ctx3=document.getElementById('ch-p').getContext('2d');
     if(chP)chP.destroy();
     chP=new Chart(ctx3,{type:'doughnut',data:{labels:['Active','Expired'],datasets:[{data:[aC,eC],backgroundColor:['#00ffb3','#ff3d6b'],borderColor:'#0b0b16',borderWidth:4,hoverOffset:10}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:tc,font:{...font,size:11},padding:14,usePointStyle:true,pointStyleWidth:10}}}}});
@@ -546,13 +572,18 @@ function upCharts(){
 // ===== RENDER AGENTS =====
 function renderAg(){
     const q=document.getElementById("search").value.toLowerCase(),s=document.getElementById("sort").value,list=document.getElementById("ag-list");list.innerHTML="";const now=Date.now();
-    let f=agents.filter(a=>{if(!a.id.toLowerCase().includes(q))return false;if(currentFilter==='active')return a.enabled&&a.endTime>now;if(currentFilter==='expired')return!a.enabled||now>a.endTime;return true});
+    let f=agents.filter(a=>{
+        if(!a.id.toLowerCase().includes(q))return false;
+        if(currentFilter==='active')return !isExpAgent(a);
+        if(currentFilter==='expired')return isExpAgent(a);
+        return true;
+    });
     switch(s){case'old':f.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));break;case'exp':f.sort((a,b)=>(a.endTime||0)-(b.endTime||0));break;case'az':f.sort((a,b)=>a.id.localeCompare(b.id));break;case'pr':f.sort((a,b)=>parseInt(b.price||0)-parseInt(a.price||0));break;default:f.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))}
 
     f.forEach(a=>{
-        const ie=!a.enabled||now>a.endTime,diff=a.endTime-now,is24=!ie&&diff<864e5;
-        const totalDur=a.endTime-(a.createdAt||a.endTime);const elapsed=now-(a.createdAt||now);
-        const pct=ie?0:Math.max(0,Math.min(100,Math.round((1-elapsed/totalDur)*100)));
+        const ie=isExpAgent(a),diff=(a.endTime||0)-now,is24=!ie&&diff>0&&diff<864e5;
+        const totalDur=(a.endTime||0)-(a.createdAt||a.endTime||0);const elapsed=now-(a.createdAt||now);
+        const pct=ie||totalDur<=0?0:Math.max(0,Math.min(100,Math.round((1-elapsed/totalDur)*100)));
         const d=document.createElement("div");d.className="ag"+(is24?" soon":"");
         d.innerHTML=`
             <div class="flex between mb6"><span style="font-weight:800;font-size:13px">${a.id}</span><span class="bdg ${ie?'b-off':'b-on'}">${ie?'EXPIRED':'ACTIVE'}</span></div>
@@ -595,7 +626,7 @@ function logAct(t,m){db.ref("ActivityLog").push({type:t,msg:m,time:Date.now()})}
 
 // ===== POPUPS =====
 function showTodayPopup(){const ts=new Date().setHours(0,0,0,0);idPData=agents.filter(a=>(a.createdAt||0)>=ts);idPType='today';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-plus" style="color:var(--c)"></i> Today\'s Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
-function showExpiredPopup(){const now=Date.now();idPData=agents.filter(a=>!a.enabled||now>a.endTime);idPType='expired';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-xmark" style="color:var(--d)"></i> Expired Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
+function showExpiredPopup(){idPData=agents.filter(a=>isExpAgent(a));idPType='expired';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-xmark" style="color:var(--d)"></i> Expired Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
 
 // Last 7 Days Active Agents
 function showWeekPopup(){
@@ -611,8 +642,8 @@ function renderIdP(){
     const q=document.getElementById('idp-q').value.toLowerCase(),f=idPData.filter(a=>a.id.toLowerCase().includes(q));
     document.getElementById('idp-cnt').textContent=f.length;const list=document.getElementById('idp-list');
     if(!f.length){list.innerHTML=`<div style="text-align:center;padding:30px;color:var(--dim);font-size:11px">No agents</div>`;return}
-    const now=Date.now();list.innerHTML=f.map(a=>{const ie=!a.enabled||now>a.endTime;
-    return`<div class="idi"><div><div style="font-weight:700;font-size:13px">${a.id}</div><div style="font-size:10px;color:var(--muted)">${a.planName||'Plan'} • ₹${a.price||0} • <span style="color:${ie?'var(--d)':'var(--a)'}">${ie?'Expired':fmtTime(a.endTime-now)}</span></div></div>
+    const now=Date.now();list.innerHTML=f.map(a=>{const ie=isExpAgent(a);const diff=(a.endTime||0)-now;
+    return`<div class="idi"><div><div style="font-weight:700;font-size:13px">${a.id}</div><div style="font-size:10px;color:var(--muted)">${a.planName||'Plan'} • ₹${a.price||0} • <span style="color:${ie?'var(--d)':'var(--a)'}">${ie?'Expired':fmtTime(diff)}</span></div></div>
     <div class="flex gap"><button class="btn btn-ic btn-sm btn-p" onclick="closeIdP();edit('${a.id}')"><i class="fas fa-cog"></i></button><button class="btn btn-ic btn-sm btn-g" onclick="cpTxt('${a.id}')"><i class="fas fa-copy"></i></button><button class="btn btn-ic btn-sm btn-s" onclick="closeIdP();openTgFor('${a.id}')"><i class="fab fa-telegram"></i></button></div></div>`}).join('')}
 function closeIdP(){document.getElementById('idp').style.display='none'}
 
@@ -631,11 +662,23 @@ function edit(id){curId=id;const a=agents.find(x=>x.id===id);document.getElement
 function saveEd(){db.ref("Agents/"+curId).update({paylink:document.getElementById("e-pay").value,qr_url:document.getElementById("e-qr").value,message:document.getElementById("e-msg").value});closeMod();toast('💾 Saved!','s')}
 function ext(d){const a=agents.find(x=>x.id===curId),now=Date.now(),b=a.endTime>now?a.endTime:now;db.ref("Agents/"+curId).update({enabled:true,endTime:b+(d*864e5)});closeMod();toast(`⏳ +${d}d ${curId}`,'s');logAct('extend',`+${d}d ${curId}`)}
 function togStatus(){const a=agents.find(x=>x.id===curId);db.ref("Agents/"+curId).update({enabled:!a.enabled});closeMod();toast(a.enabled?'🚫 Off':'✅ On','s')}
-function bulkDel(){if(!confirm("Delete ALL Expired?"))return;const now=Date.now(),u={};agents.forEach(a=>{if(!a.enabled||now>a.endTime)u[a.id]=null});db.ref("Agents").update(u);toast('🗑️ Done','s');logAct('delete','Bulk deleted')}
-function filterTab(t){currentFilter=currentFilter===t?'all':t;document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));if(currentFilter!=='all'){const el=document.getElementById('tab-'+{active:'active',expired:'exp'}[currentFilter]);if(el)el.classList.add('on')}document.getElementById("btn-del").style.display=currentFilter==='expired'?'inline-flex':'none';renderAg()}
+function bulkDel(){if(!confirm("Delete ALL Expired?"))return;const u={};agents.forEach(a=>{if(isExpAgent(a))u[a.id]=null});db.ref("Agents").update(u);toast('🗑️ Done','s');logAct('delete','Bulk deleted')}
+function filterTab(t){
+    currentFilter=currentFilter===t?'all':t;
+    document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));
+    if(currentFilter!=='all'){
+        const tabMap={active:'tab-active',expired:'tab-exp'};
+        const el=document.getElementById(tabMap[currentFilter]);
+        if(el) el.classList.add('on');
+    }
+    const isExp=currentFilter==='expired';
+    document.getElementById("btn-del").style.display=isExp?'inline-flex':'none';
+    document.getElementById("btn-view-exp").style.display=isExp?'inline-flex':'none';
+    renderAg();
+}
 
 // Export
-function exportCSV(){const now=Date.now();let c="ID,Plan,Price,Status,Days Left,Created\n";agents.forEach(a=>{const ie=!a.enabled||now>a.endTime;c+=`${a.id},${a.planName||''},${a.price||0},${ie?'Expired':'Active'},${ie?0:Math.ceil((a.endTime-now)/864e5)},${new Date(a.createdAt||0).toLocaleDateString()}\n`});const b=new Blob([c],{type:'text/csv'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='agents.csv';l.click();toast('📥 Exported!','s')}
+function exportCSV(){const now=Date.now();let c="ID,Plan,Price,Status,Days Left,Created\n";agents.forEach(a=>{const ie=isExpAgent(a);c+=`${a.id},${a.planName||''},${a.price||0},${ie?'Expired':'Active'},${ie?0:Math.ceil(((a.endTime||0)-now)/864e5)},${new Date(a.createdAt||0).toLocaleDateString()}\n`});const b=new Blob([c],{type:'text/csv'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='agents.csv';l.click();toast('📥 Exported!','s')}
 
 // ===== INVOICE (WITH QR FIXED!) =====
 function openInv(){openInvFor(curId)}
