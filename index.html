@@ -158,6 +158,10 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
 .inv-divider{border:none;border-top:2px solid #ececf4;margin:14px 0}
 .inv-footer{font-size:10px;color:#9a9ab0;text-align:center;margin-top:6px}
 .inv-badge{display:inline-block;background:linear-gradient(135deg,#7c5cff,#00e5a0);color:#fff;font-size:10px;font-weight:800;padding:3px 12px;border-radius:12px;letter-spacing:.5px}
+.inv-badge-unpaid{display:inline-block;background:linear-gradient(135deg,#ff3d6b,#ff6b35);color:#fff;font-size:10px;font-weight:800;padding:3px 12px;border-radius:12px;letter-spacing:.5px;animation:blk 1.2s infinite}
+.unpaid-warn{background:#fff5f5;border:1px solid #ffe0e0;border-radius:10px;padding:12px;margin-top:14px}
+.unpaid-warn p{color:#cc3344;font-size:11px;font-weight:600;margin:0}
+.unpaid-warn .warn-title{font-size:12px;font-weight:800;color:#aa2233;margin-bottom:4px;display:flex;align-items:center;gap:5px}
 
 /* Telegram Preview */
 .tg-pv{background:#0e1621;border:1px solid #1a2836;border-radius:12px;padding:12px;margin:8px 0;font-size:12px;color:#e0e0e0;line-height:1.6;white-space:pre-wrap}
@@ -370,7 +374,7 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <button class="btn btn-s btn-sm" onclick="ext(180)">+6M</button><button class="btn btn-s btn-sm" onclick="ext(365)">+1Y</button>
     </div>
     <div class="flex gap mb6"><button class="btn btn-p btn-full" onclick="saveEd()"><i class="fas fa-floppy-disk"></i> Save</button><button class="btn btn-full" id="btn-tog" onclick="togStatus()">Disable</button></div>
-    <div class="flex gap"><button class="btn btn-g btn-full btn-sm" onclick="openInv()"><i class="fas fa-image"></i> Invoice</button><button class="btn btn-g btn-full btn-sm" onclick="openTg()"><i class="fab fa-telegram"></i> Telegram</button><button class="btn btn-g btn-full btn-sm" onclick="openWa()"><i class="fab fa-whatsapp"></i> WhatsApp</button></div>
+    <div class="flex gap"><button class="btn btn-g btn-full btn-sm" onclick="openInv()"><i class="fas fa-image"></i> Paid</button><button class="btn btn-full btn-sm" onclick="openUInv()" style="background:rgba(255,61,107,.1);color:var(--d);border:1px solid rgba(255,61,107,.2)"><i class="fas fa-file-circle-exclamation"></i> Unpaid</button><button class="btn btn-g btn-full btn-sm" onclick="openTg()"><i class="fab fa-telegram"></i> Telegram</button><button class="btn btn-g btn-full btn-sm" onclick="openWa()"><i class="fab fa-whatsapp"></i> WhatsApp</button></div>
 </div>
 </div>
 
@@ -421,6 +425,54 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <p class="inv-footer">Auto-generated invoice • Thank you for your payment!</p>
     </div>
     <div class="flex gap" style="margin-top:12px"><button class="btn btn-p btn-full" onclick="dlInv()"><i class="fas fa-image"></i> Download Image</button><button class="btn btn-g btn-full" onclick="closeInvM()">Close</button></div>
+</div>
+</div>
+
+<!-- ===== UNPAID INVOICE MODAL ===== -->
+<div class="mo" id="uinv-mo" onclick="event.target===this&&closeUInvM()">
+<div class="mb" style="max-width:560px">
+    <div class="flex between mb12"><h3><i class="fas fa-file-invoice" style="color:var(--d)"></i> Unpaid Reminder</h3><button class="btn btn-ic btn-g" onclick="closeUInvM()"><i class="fas fa-xmark"></i></button></div>
+    <div id="uinv-box" style="background:#fff;color:#1a1a2e;padding:30px;font-family:'Outfit',sans-serif;border-radius:14px;max-width:520px;margin:0 auto">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><h2 style="font-weight:900;font-size:20px;color:#1a1a2e;margin-bottom:2px">INVOICE</h2><p style="color:#7a7a9a;font-size:11px" id="uinv-dt"></p><div class="inv-badge-unpaid" style="margin-top:6px">⚠ UNPAID</div></div>
+            <div style="text-align:right"><div style="font-weight:900;font-size:16px;background:linear-gradient(135deg,#ff3d6b,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent">FUN SHOP</div><p style="color:#7a7a9a;font-size:10px">Digital Access Service</p></div>
+        </div>
+        <hr style="border:none;border-top:2px solid #ffe0e0;margin:14px 0">
+        <p style="font-size:11px;color:#7a7a9a">Bill To:</p>
+        <p style="font-weight:800;font-size:15px;color:#1a1a2e" id="uinv-name"></p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px;background:#fff5f5;font-weight:700;color:#aa3344">Description</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px;background:#fff5f5;font-weight:700;color:#aa3344">Plan</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px;background:#fff5f5;font-weight:700;color:#aa3344">Amount</th></tr></thead><tbody id="uinv-tbody"></tbody></table>
+        <div class="unpaid-warn">
+            <div class="warn-title">⚠️ Payment Pending</div>
+            <p>Your subscription payment is overdue. Please pay immediately to continue your access. Service will be suspended if payment is not received.</p>
+        </div>
+        <div id="uinv-qr-section" style="display:none;margin-top:14px;padding:14px;background:#f8f8fc;border-radius:12px;border:1px solid #e8e8f0">
+            <div style="display:flex;align-items:center;gap:14px">
+                <div style="text-align:center">
+                    <p style="font-size:9px;color:#aa3344;margin-bottom:6px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px">PAY NOW</p>
+                    <img id="uinv-qr-img" crossorigin="anonymous" style="width:120px;height:120px;object-fit:contain;border-radius:10px;border:2px solid #ffe0e0;background:#fff;display:block">
+                </div>
+                <div style="flex:1">
+                    <p style="font-size:11px;color:#aa3344;font-weight:700;margin-bottom:4px">Scan & Pay Now</p>
+                    <p style="font-size:10px;color:#9a9ab0;line-height:1.5">Scan with Google Pay, PhonePe, Paytm or any UPI app.</p>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:14px">
+            <div style="text-align:right;background:#fff5f5;padding:10px 18px;border-radius:10px;border:1px solid #ffe0e0">
+                <span style="color:#aa3344;font-size:12px">Amount Due: </span>
+                <span style="font-size:20px;font-weight:900;color:#cc2233" id="uinv-amt"></span>
+            </div>
+        </div>
+        <hr style="border:none;border-top:1px solid #ffe0e0;margin:14px 0">
+        <p style="font-size:10px;color:#cc6677;text-align:center;font-weight:600">⚠ This is a payment reminder • Please pay to avoid service interruption</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+        <div class="flex gap">
+            <button class="btn btn-p btn-full" onclick="dlUInv()"><i class="fas fa-image"></i> Download Image</button>
+            <button class="btn btn-full" onclick="sendUInvTg()" style="background:#29b6f6;color:#fff;font-weight:800"><i class="fab fa-telegram"></i> Send via Telegram</button>
+        </div>
+        <button class="btn btn-g btn-full" onclick="closeUInvM()">Close</button>
+    </div>
 </div>
 </div>
 
@@ -595,7 +647,8 @@ function renderAg(){
                 <button class="btn btn-ic btn-sm btn-g" onclick="openWaFor('${a.id}')" title="WhatsApp"><i class="fab fa-whatsapp" style="color:#25d366"></i></button>
                 <button class="btn btn-ic btn-sm btn-g" onclick="cpTxt('${a.id}')" title="Copy"><i class="fas fa-copy"></i></button>
                 <button class="btn btn-ic btn-sm btn-p" onclick="edit('${a.id}')" title="Edit"><i class="fas fa-cog"></i></button>
-                <button class="btn btn-ic btn-sm btn-g" onclick="openInvFor('${a.id}')" title="Invoice"><i class="fas fa-file-invoice"></i></button>
+                <button class="btn btn-ic btn-sm btn-g" onclick="openInvFor('${a.id}')" title="Paid Invoice"><i class="fas fa-file-invoice"></i></button>
+                <button class="btn btn-ic btn-sm btn-d" onclick="openUInvFor('${a.id}')" title="Unpaid Reminder"><i class="fas fa-file-circle-exclamation"></i></button>
                 <button class="btn btn-ic btn-sm btn-d" onclick="delAg('${a.id}')" title="Delete"><i class="fas fa-trash"></i></button>
             </div>`;
         list.appendChild(d);
@@ -736,6 +789,72 @@ function dlInv(){
     },600);
 }
 function closeInvM(){document.getElementById("inv-mo").style.display="none"}
+
+// ===== UNPAID INVOICE =====
+function openUInv(){openUInvFor(curId)}
+function openUInvFor(id){
+    const a=agents.find(x=>x.id===id);if(!a)return;curId=id;
+    document.getElementById("uinv-dt").textContent="Date: "+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById("uinv-name").textContent=a.id;
+    document.getElementById("uinv-tbody").innerHTML=`<tr><td style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px">Digital Access Subscription</td><td style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px">${a.planName||'Plan'}</td><td style="text-align:left;padding:8px 10px;border-bottom:1px solid #ffe0e0;font-size:12px;font-weight:800;color:#cc2233">₹${a.price||0}</td></tr>`;
+    document.getElementById("uinv-amt").textContent="₹"+(a.price||0);
+    // QR
+    const qrUrl=a.qr_url||defQr;
+    const qrSec=document.getElementById("uinv-qr-section");
+    const qrImg=document.getElementById("uinv-qr-img");
+    if(qrUrl&&qrUrl.trim()!==''){
+        qrSec.style.display="block";
+        const tmp=new Image();tmp.crossOrigin="anonymous";
+        tmp.onload=function(){qrImg.src=this.src;qrImg.style.display="block"};
+        tmp.onerror=function(){qrImg.removeAttribute('crossorigin');qrImg.src=qrUrl;qrImg.style.display="block"};
+        tmp.src=qrUrl;
+    }else{qrSec.style.display="none"}
+    document.getElementById("uinv-mo").style.display="flex";closeMod();
+}
+
+// Download unpaid invoice as image
+function dlUInv(){
+    toast('⏳ Generating Image...','i');
+    setTimeout(()=>{
+        html2canvas(document.getElementById("uinv-box"),{
+            scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false
+        }).then(canvas=>{
+            const link=document.createElement('a');
+            link.download='Unpaid_Invoice_'+(document.getElementById("uinv-name").textContent||'agent')+'.png';
+            link.href=canvas.toDataURL('image/png',1.0);
+            link.click();
+            toast('🖼️ Unpaid Invoice Downloaded!','s');
+        }).catch(err=>{console.error(err);toast('❌ Error','e')});
+    },600);
+}
+
+// Send unpaid invoice image via Telegram
+function sendUInvTg(){
+    if(!defTg){toast('⚠️ Set Telegram ID in Global Config first!','w');return}
+    const a=agents.find(x=>x.id===curId);if(!a)return;
+    toast('⏳ Generating & sending...','i');
+    setTimeout(()=>{
+        html2canvas(document.getElementById("uinv-box"),{
+            scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false
+        }).then(canvas=>{
+            // Download the image first
+            const imgData=canvas.toDataURL('image/png',1.0);
+            const link=document.createElement('a');
+            link.download='Unpaid_'+a.id+'.png';
+            link.href=imgData;
+            link.click();
+            // Then open Telegram with reminder message
+            const msg=`⚠️ PAYMENT REMINDER\n\nHello ${a.id},\n\n🚫 Your payment of ₹${a.price||0} for "${a.planName||'Plan'}" is UNPAID.\n\n💰 Please pay immediately to avoid service suspension.\n\n👉 ${a.paylink||defPay||'Contact admin for payment link'}\n\n📎 Invoice image attached above.\n\n— FUN SHOP Admin`;
+            const tgUser=defTg.replace('@','');
+            setTimeout(()=>{
+                window.open(`https://t.me/${tgUser}?text=${encodeURIComponent(msg)}`,'_blank');
+                toast('📨 Image downloaded + Telegram opened! Send the image in chat.','s');
+            },800);
+        }).catch(err=>{console.error(err);toast('❌ Error generating image','e')});
+    },600);
+}
+
+function closeUInvM(){document.getElementById("uinv-mo").style.display="none"}
 
 // ===== TELEGRAM =====
 function openTg(){openTgFor(curId)}
