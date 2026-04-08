@@ -6,6 +6,7 @@
 <title>⚡ FUN SHOP ADMIN PRO MAX</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -181,9 +182,30 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
 .flex{display:flex;align-items:center}.between{justify-content:space-between}.gap{gap:7px}
 .mb6{margin-bottom:6px}.mb10{margin-bottom:10px}.mb12{margin-bottom:12px}
 .mono{font-family:'JetBrains Mono',monospace}
+
+/* Login Screen */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#login-screen .login-box{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:30px;width:90%;max-width:360px;text-align:center}
+#login-screen h2{font-size:20px;font-weight:900;margin-bottom:4px;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#login-screen .login-sub{font-size:11px;color:var(--muted);margin-bottom:18px}
+#login-screen input{margin-bottom:10px}
+#login-screen .btn{width:100%;height:42px;font-size:13px}
+#login-err{color:var(--d);font-size:11px;margin-top:8px;min-height:16px}
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+    <div class="login-box">
+        <h2><i class="fas fa-bolt"></i> FUN SHOP ADMIN</h2>
+        <div class="login-sub">Admin Login Required</div>
+        <input type="email" id="login-email" placeholder="Admin Email">
+        <input type="password" id="login-pass" placeholder="Password">
+        <button class="btn btn-p" onclick="doLogin()"><i class="fas fa-right-to-bracket"></i> LOGIN</button>
+        <div id="login-err"></div>
+    </div>
+</div>
 
 <div class="tc" id="toasts"></div>
 
@@ -301,11 +323,19 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
         <!-- Config -->
         <div class="pnl">
             <div class="pnl-t"><span><i class="fas fa-sliders" style="color:var(--p)"></i> Global Config</span></div>
-            <input id="g-pay" placeholder="Default UPI Link (upi://pay?...)" class="mb6">
-            <input id="g-qr" placeholder="Default QR Image URL" class="mb6">
+            <label>Default UPI Link</label>
+            <input id="g-pay" placeholder="upi://pay?pa=..." class="mb6">
+            <label>Default INR QR Image</label>
+            <input id="g-qr" placeholder="INR QR Image URL" class="mb6">
+            <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px">
+            <label style="color:var(--a)">💎 USDT Config</label>
+            <input id="g-usdt-addr" placeholder="USDT Wallet Address" class="mb6">
+            <div class="fr"><input id="g-usdt-chain" placeholder="Chain (TRC20)" style="max-width:110px"><input id="g-usdt-amt" placeholder="USDT Amount" class="mb6"></div>
+            <input id="g-usdt-qr" placeholder="USDT QR Image URL" class="mb6">
+            </div>
             <input id="g-tg" placeholder="Telegram ID (@FUN_786)" class="mb6">
             <div class="fr"><input id="g-exp" type="number" placeholder="Today Expense ₹"><button class="btn btn-w btn-sm" onclick="saveExp()"><i class="fas fa-save"></i></button></div>
-            <button class="btn btn-p btn-full" onclick="saveCfg()"><i class="fas fa-check"></i> Save</button>
+            <button class="btn btn-p btn-full" onclick="saveCfg()"><i class="fas fa-check"></i> Save All</button>
         </div>
         <!-- Payment Requests -->
         <div class="pnl" style="flex:1">
@@ -362,9 +392,16 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
 <div class="mb">
     <div class="flex between mb12"><h3><i class="fas fa-pen-to-square" style="color:var(--p)"></i> Edit Agent</h3><button class="btn btn-ic btn-g" onclick="closeMod()"><i class="fas fa-xmark"></i></button></div>
     <input type="hidden" id="e-id">
-    <label>UPI Deep Link</label><input id="e-pay" placeholder="upi://pay?pa=..." class="mb6">
-    <label>QR Image URL</label>
+    <label>UPI / Payment Link</label><input id="e-pay" placeholder="upi://pay?pa=..." class="mb6">
+    <label>INR QR Image URL</label>
     <div class="flex gap mb6" style="align-items:flex-start"><input id="e-qr" placeholder="https://..." oninput="pvQr()"><img id="e-qr-pv" class="img-pv"></div>
+    <div style="border-top:1px solid var(--border);margin:6px 0;padding-top:8px">
+    <label style="color:var(--a)">💎 USDT Settings</label>
+    <input id="e-usdt-addr" placeholder="USDT Wallet Address" class="mb6">
+    <div class="fr"><input id="e-usdt-chain" placeholder="Chain (TRC20)" style="max-width:110px"><input id="e-usdt-amt" placeholder="USDT Amount" class="mb6"></div>
+    <label>USDT QR Image URL</label>
+    <div class="flex gap mb6" style="align-items:flex-start"><input id="e-usdt-qr" placeholder="https://..." oninput="pvUsdtQr()"><img id="e-usdt-qr-pv" class="img-pv"></div>
+    </div>
     <label>Custom Message</label><input id="e-msg" class="mb6">
     <label>Quick Extend</label>
     <div class="ext-row">
@@ -503,11 +540,43 @@ input::placeholder,textarea::placeholder{color:var(--dim)}
 </div>
 
 <script>
-const firebaseConfig={databaseURL:"https://my-project-funowner-default-rtdb.firebaseio.com"};
-firebase.initializeApp(firebaseConfig);const db=firebase.database();
+const firebaseConfig={
+    apiKey:"AIzaSyATrqO_oVRZC23YPqSLebIay9D4Bx-hUPc",
+    authDomain:"funshop-57653.firebaseapp.com",
+    databaseURL:"https://funshop-57653-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);const db=firebase.database();const auth=firebase.auth();
+
+// ===== AUTH GATE =====
+function doLogin(){
+    const e=document.getElementById('login-email').value.trim();
+    const p=document.getElementById('login-pass').value;
+    const err=document.getElementById('login-err');
+    if(!e||!p){err.textContent='Enter email & password';return}
+    err.textContent='Logging in...';
+    auth.signInWithEmailAndPassword(e,p).then(()=>{
+        err.textContent='';
+    }).catch(er=>{
+        err.textContent='❌ '+er.message;
+    });
+}
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+auth.onAuthStateChanged(user=>{
+    if(user){
+        console.log('AUTH OK - UID:', user.uid);
+        document.getElementById('login-screen').style.display='none';
+        init();
+    } else {
+        console.log('AUTH: Not logged in');
+        document.getElementById('login-screen').style.display='flex';
+        _inited=false;
+    }
+});
 
 let agents=[],requests=[],currentFilter='all',curId=null;
 let defPay="",defQr="",defTg="",todExp=0,knUTR={},aLog=[];
+let defUsdtAddr="",defUsdtChain="TRC20",defUsdtAmt="",defUsdtQr="";
 let idPData=[],idPType='';
 let earnRange=7,growRange=15;
 let chE,chG,chP;
@@ -515,11 +584,16 @@ let chE,chG,chP;
 // Clock
 setInterval(()=>{const n=new Date();document.getElementById('clk').textContent=n.toLocaleTimeString('en-IN',{hour12:false})+' • '+n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})},1000);
 
+let _inited=false;
 function init(){
-    db.ref("Config").on("value",s=>{const d=s.val()||{};defPay=d.gateway||"";defQr=d.qr_url||"";defTg=d.telegram_id||"";todExp=parseInt(d.todayExpense||0);document.getElementById("g-pay").value=defPay;document.getElementById("g-qr").value=defQr;document.getElementById("g-tg").value=defTg;document.getElementById("g-exp").value=todExp||"";upStats()});
-    db.ref("Agents").on("value",s=>{agents=[];const d=s.val();if(d)Object.keys(d).forEach(k=>agents.push({id:k,...d[k]}));agents.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));upStats();renderAg();checkAlerts();upCharts()});
-    db.ref("PaymentRequests").on("value",s=>{requests=[];knUTR={};const d=s.val();if(d)Object.keys(d).forEach(k=>{const r={key:k,...d[k]};if(knUTR[r.utr]){r.ff=true;const o=requests.find(x=>x.utr===r.utr);if(o)o.ff=true}knUTR[r.utr]=(knUTR[r.utr]||0)+1;requests.push(r)});renderRq();checkAlerts()});
-    db.ref("ActivityLog").orderByChild("time").limitToLast(30).on("value",s=>{aLog=[];const d=s.val();if(d)Object.keys(d).forEach(k=>aLog.push({key:k,...d[k]}));aLog.sort((a,b)=>(b.time||0)-(a.time||0));renderLog()});
+    if(_inited)return;_inited=true;
+    console.log('INIT: Setting up DB listeners...');
+    var onErr=function(path){return function(err){toast('❌ DB Error ['+path+']: '+err.message,'e');console.error('DB Error ['+path+']:',err)}};
+    db.ref("Config").on("value",s=>{console.log('CONFIG loaded');const d=s.val()||{};defPay=d.gateway||"";defQr=d.qr_url||"";defTg=d.telegram_id||"";todExp=parseInt(d.todayExpense||0);defUsdtAddr=d.usdt_address||"";defUsdtChain=d.usdt_chain||"TRC20";defUsdtAmt=d.usdt_amount||"";defUsdtQr=d.usdt_qr_url||"";document.getElementById("g-pay").value=defPay;document.getElementById("g-qr").value=defQr;document.getElementById("g-tg").value=defTg;document.getElementById("g-exp").value=todExp||"";document.getElementById("g-usdt-addr").value=defUsdtAddr;document.getElementById("g-usdt-chain").value=defUsdtChain;document.getElementById("g-usdt-amt").value=defUsdtAmt;document.getElementById("g-usdt-qr").value=defUsdtQr;upStats()},onErr('Config'));
+    db.ref("Agents").on("value",s=>{console.log('AGENTS loaded:', s.numChildren());agents=[];const d=s.val();if(d)Object.keys(d).forEach(k=>agents.push({id:k,...d[k]}));agents.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));upStats();renderAg();checkAlerts();upCharts()},onErr('Agents'));
+    db.ref("PaymentRequests").on("value",s=>{console.log('PAYMENTS loaded');requests=[];knUTR={};const d=s.val();if(d)Object.keys(d).forEach(k=>{const r={key:k,...d[k]};if(knUTR[r.utr]){r.ff=true;const o=requests.find(x=>x.utr===r.utr);if(o)o.ff=true}knUTR[r.utr]=(knUTR[r.utr]||0)+1;requests.push(r)});renderRq();checkAlerts()},onErr('PaymentRequests'));
+    db.ref("ActivityLog").orderByChild("time").limitToLast(30).on("value",s=>{console.log('LOG loaded');aLog=[];const d=s.val();if(d)Object.keys(d).forEach(k=>aLog.push({key:k,...d[k]}));aLog.sort((a,b)=>(b.time||0)-(a.time||0));renderLog()},onErr('ActivityLog'));
+    toast('🔗 Database Connected!','s');
 }
 
 // Safe expired check helper
@@ -675,7 +749,7 @@ function renderLog(){
     const cl={add:'var(--a)',delete:'var(--d)',approve:'var(--s)',extend:'var(--p)',config:'var(--w)'};
     box.innerHTML=aLog.slice(0,20).map(l=>`<div class="log-i"><div class="log-d" style="background:${cl[l.type]||'var(--muted)'}"></div><div><div style="font-weight:600;font-size:11px">${l.msg||''}</div><div style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace">${new Date(l.time).toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div></div></div>`).join('');
 }
-function logAct(t,m){db.ref("ActivityLog").push({type:t,msg:m,time:Date.now()})}
+function logAct(t,m){db.ref("ActivityLog").push({type:t,msg:m,time:Date.now()}).catch(err=>console.error('Log error:',err))}
 
 // ===== POPUPS =====
 function showTodayPopup(){const ts=new Date().setHours(0,0,0,0);idPData=agents.filter(a=>(a.createdAt||0)>=ts);idPType='today';document.getElementById('idp-title').innerHTML='<i class="fas fa-user-plus" style="color:var(--c)"></i> Today\'s Agents';document.getElementById('idp-q').value='';document.getElementById('idp').style.display='flex';renderIdP()}
@@ -703,19 +777,18 @@ function closeIdP(){document.getElementById('idp').style.display='none'}
 // ===== ACTIONS =====
 function addAg(){const id=document.getElementById("n-id").value.trim().replace(/\./g,'_');if(!id)return toast('Enter Agent ID','w');const pl=document.getElementById("n-pl"),dur=parseInt(pl.value),nm=pl.options[pl.selectedIndex].text,pr=document.getElementById("n-pr").value;
 db.ref("Agents/"+id).once("value",s=>{const now=Date.now();let end=now+(dur*1000);if(s.exists()&&s.val().endTime>now)end=s.val().endTime+(dur*1000);
-db.ref("Agents/"+id).update({enabled:true,endTime:end,createdAt:s.exists()?s.val().createdAt:now,planName:nm,price:pr,paylink:defPay,qr_url:defQr,message:"Renew Now"});
-document.getElementById("n-id").value="";document.getElementById("n-pr").value="";toast(`✅ ${id} added (${nm})`,'s');logAct('add',`Added ${id} — ${nm} ₹${pr}`)})}
-
-function appRq(k,id){const d=prompt("Approve "+id+"?\nDays:","30");if(!d)return;db.ref("Agents/"+id).once("value",s=>{const now=Date.now();let b=(s.exists()&&s.val().endTime>now)?s.val().endTime:now;db.ref("Agents/"+id).update({enabled:true,endTime:b+(parseInt(d)*864e5),message:"Access Granted"});db.ref("PaymentRequests/"+k).remove();toast(`✅ ${id} +${d}d`,'s');logAct('approve',`Approved ${id} ${d}d`)})}
-function saveCfg(){db.ref("Config").update({gateway:document.getElementById("g-pay").value,qr_url:document.getElementById("g-qr").value,telegram_id:document.getElementById("g-tg").value});toast('⚙️ Saved!','s');logAct('config','Config updated')}
-function saveExp(){const v=parseInt(document.getElementById("g-exp").value||0);db.ref("Config").update({todayExpense:v});toast('💸 ₹'+v,'s')}
+db.ref("Agents/"+id).update({enabled:true,endTime:end,createdAt:s.exists()?s.val().createdAt:now,planName:nm,price:pr,paylink:defPay,qr_url:defQr,usdt_address:defUsdtAddr,usdt_chain:defUsdtChain,usdt_amount:defUsdtAmt,usdt_qr_url:defUsdtQr,message:"Pay Now and contact on telegram @FUN_786"}).then(()=>{
+document.getElementById("n-id").value="";document.getElementById("n-pr").value="";toast(`✅ ${id} added (${nm})`,'s');logAct('add',`Added ${id} — ${nm} ₹${pr}`)}).catch(err=>{toast('❌ DB Write Failed: '+err.message,'e');console.error('AddAgent Error:',err)})})}
+function appRq(k,id){const d=prompt("Approve "+id+"?\nDays:","30");if(!d)return;db.ref("Agents/"+id).once("value",s=>{const now=Date.now();let b=(s.exists()&&s.val().endTime>now)?s.val().endTime:now;db.ref("Agents/"+id).update({enabled:true,endTime:b+(parseInt(d)*864e5),message:"Access Granted"}).then(()=>{db.ref("PaymentRequests/"+k).remove();toast(`✅ ${id} +${d}d`,'s');logAct('approve',`Approved ${id} ${d}d`)}).catch(err=>toast('❌ '+err.message,'e'))})}
+function saveCfg(){db.ref("Config").update({gateway:document.getElementById("g-pay").value,qr_url:document.getElementById("g-qr").value,telegram_id:document.getElementById("g-tg").value,usdt_address:document.getElementById("g-usdt-addr").value,usdt_chain:document.getElementById("g-usdt-chain").value||"TRC20",usdt_amount:document.getElementById("g-usdt-amt").value,usdt_qr_url:document.getElementById("g-usdt-qr").value}).then(()=>{toast('⚙️ Saved!','s');logAct('config','Config updated')}).catch(err=>toast('❌ '+err.message,'e'))}
+function saveExp(){const v=parseInt(document.getElementById("g-exp").value||0);db.ref("Config").update({todayExpense:v}).then(()=>toast('💸 ₹'+v,'s')).catch(err=>toast('❌ '+err.message,'e'))}
 
 // Edit
-function edit(id){curId=id;const a=agents.find(x=>x.id===id);document.getElementById("e-pay").value=a.paylink||"";document.getElementById("e-qr").value=a.qr_url||"";document.getElementById("e-msg").value=a.message||"";const b=document.getElementById("btn-tog");b.innerHTML=a.enabled?'🚫 Disable':'✅ Enable';b.className=a.enabled?"btn btn-d btn-full":"btn btn-s btn-full";document.getElementById("modal").style.display="flex";pvQr()}
-function saveEd(){db.ref("Agents/"+curId).update({paylink:document.getElementById("e-pay").value,qr_url:document.getElementById("e-qr").value,message:document.getElementById("e-msg").value});closeMod();toast('💾 Saved!','s')}
-function ext(d){const a=agents.find(x=>x.id===curId),now=Date.now(),b=a.endTime>now?a.endTime:now;db.ref("Agents/"+curId).update({enabled:true,endTime:b+(d*864e5)});closeMod();toast(`⏳ +${d}d ${curId}`,'s');logAct('extend',`+${d}d ${curId}`)}
-function togStatus(){const a=agents.find(x=>x.id===curId);db.ref("Agents/"+curId).update({enabled:!a.enabled});closeMod();toast(a.enabled?'🚫 Off':'✅ On','s')}
-function bulkDel(){if(!confirm("Delete ALL Expired?"))return;const u={};agents.forEach(a=>{if(isExpAgent(a))u[a.id]=null});db.ref("Agents").update(u);toast('🗑️ Done','s');logAct('delete','Bulk deleted')}
+function edit(id){curId=id;const a=agents.find(x=>x.id===id);document.getElementById("e-pay").value=a.paylink||"";document.getElementById("e-qr").value=a.qr_url||"";document.getElementById("e-msg").value=a.message||"";document.getElementById("e-usdt-addr").value=a.usdt_address||"";document.getElementById("e-usdt-chain").value=a.usdt_chain||"";document.getElementById("e-usdt-amt").value=a.usdt_amount||"";document.getElementById("e-usdt-qr").value=a.usdt_qr_url||"";const b=document.getElementById("btn-tog");b.innerHTML=a.enabled?'🚫 Disable':'✅ Enable';b.className=a.enabled?"btn btn-d btn-full":"btn btn-s btn-full";document.getElementById("modal").style.display="flex";pvQr();pvUsdtQr()}
+function saveEd(){db.ref("Agents/"+curId).update({paylink:document.getElementById("e-pay").value,qr_url:document.getElementById("e-qr").value,message:document.getElementById("e-msg").value,usdt_address:document.getElementById("e-usdt-addr").value,usdt_chain:document.getElementById("e-usdt-chain").value||"TRC20",usdt_amount:document.getElementById("e-usdt-amt").value,usdt_qr_url:document.getElementById("e-usdt-qr").value}).then(()=>{closeMod();toast('💾 Saved!','s')}).catch(err=>toast('❌ '+err.message,'e'))}
+function ext(d){const a=agents.find(x=>x.id===curId),now=Date.now(),b=a.endTime>now?a.endTime:now;db.ref("Agents/"+curId).update({enabled:true,endTime:b+(d*864e5)}).then(()=>{closeMod();toast(`⏳ +${d}d ${curId}`,'s');logAct('extend',`+${d}d ${curId}`)}).catch(err=>toast('❌ '+err.message,'e'))}
+function togStatus(){const a=agents.find(x=>x.id===curId);db.ref("Agents/"+curId).update({enabled:!a.enabled}).then(()=>{closeMod();toast(a.enabled?'🚫 Off':'✅ On','s')}).catch(err=>toast('❌ '+err.message,'e'))}
+function bulkDel(){if(!confirm("Delete ALL Expired?"))return;const u={};agents.forEach(a=>{if(isExpAgent(a))u[a.id]=null});db.ref("Agents").update(u).then(()=>{toast('🗑️ Done','s');logAct('delete','Bulk deleted')}).catch(err=>toast('❌ '+err.message,'e'))}
 function filterTab(t){
     currentFilter=currentFilter===t?'all':t;
     document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));
@@ -873,14 +946,15 @@ function closeWaM(){document.getElementById("wa-mo").style.display="none"}
 
 // Utils
 function pvQr(){const u=document.getElementById("e-qr").value,i=document.getElementById("e-qr-pv");if(u){i.src=u;i.style.display="block"}else i.style.display="none"}
+function pvUsdtQr(){const u=document.getElementById("e-usdt-qr").value,i=document.getElementById("e-usdt-qr-pv");if(u){i.src=u;i.style.display="block"}else i.style.display="none"}
 function cpTxt(t){navigator.clipboard.writeText(t);toast('📋 Copied!','i')}
-function delAg(id){if(confirm("Delete "+id+"?")){db.ref("Agents/"+id).remove();toast('🗑️ Deleted','s');logAct('delete',`Del ${id}`)}}
-function rejRq(k){if(confirm("Reject?")){db.ref("PaymentRequests/"+k).remove();toast('❌ Rejected','i')}}
+function delAg(id){if(confirm("Delete "+id+"?")){db.ref("Agents/"+id).remove().then(()=>{toast('🗑️ Deleted','s');logAct('delete',`Del ${id}`)}).catch(err=>toast('❌ '+err.message,'e'))}}
+function rejRq(k){if(confirm("Reject?")){db.ref("PaymentRequests/"+k).remove().then(()=>toast('❌ Rejected','i')).catch(err=>toast('❌ '+err.message,'e'))}}
 function closeMod(){document.getElementById("modal").style.display="none"}
 
 function toast(m,t='i'){const c={s:'var(--a)',w:'var(--w)',i:'var(--p)',e:'var(--d)'};const el=document.createElement('div');el.className='tt';el.style.borderLeft=`3px solid ${c[t]||c.i}`;el.innerHTML=`<span>${m}</span>`;document.getElementById('toasts').appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},3000)}
 
-init();
+// init() is ONLY called by auth.onAuthStateChanged after login
 </script>
 </body>
 </html>
